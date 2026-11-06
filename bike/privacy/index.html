@@ -125,35 +125,166 @@
         <p>문의: <a href="mailto:raon@kwxl.moe">raon@kwxl.moe</a></p>
       </div>
 
-      <h2>1. 처리하는 정보와 목적</h2>
-      <p>앱은 회원가입이나 로그인 기능을 제공하지 않으며, 사용자의 이름, 이메일, 전화번호 등의 개인정보를 수집하거나 저장하지 않습니다.</p>
+      <h2>1. 개인정보의 처리 목적·항목 및 보유기간</h2>
+      <p>운영자는 서비스 제공에 필요한 최소한의 정보만을 다음 목적과 범위에서 처리합니다. 기기 내에서 처리되는 정보는 이용자가 요청한 현재 위치 표시, 주행 측정·기록, GPX 안내 및 설정 유지 기능의 제공에 필요한 정보입니다. 이와 같은 서비스 제공에 필요한 처리의 근거는 「개인정보 보호법」 제15조제1항제4호에 따른 서비스 이용계약의 이행입니다. 이 설명은 아래의 기기 내 기능 제공에 관한 것이며 외부 SDK의 모든 처리나 국외 이전의 근거까지 의미하지 않습니다. 운영자가 직접 수신하는 문의 정보는 아래 ⑥에서 별도로 안내합니다. 외부 SDK 또는 이용자가 선택한 서비스의 처리는 제5항에서 구분하여 설명합니다.</p>
+      <p><strong>① 현재 위치 표시</strong></p>
       <ul>
-        <li><strong>현재 위치 표시:</strong> 지도 화면을 보는 동안 기기 위치를 받아 현재 위치를 표시합니다. 이 목적의 위치는 주행 기록으로 저장하지 않습니다.</li>
-        <li><strong>주행 측정·GPX 안내:</strong> 위치, 수신 시각, 정확도, 속도, 고도, 진행 방향을 받아 거리·시간·속도 계산, 주행 경로 기록 및 코스 안내에 사용합니다.</li>
-        <li><strong>주행 기록:</strong> 주행 ID, 시작·종료 시각, 주행 지표, 칼로리 추정치, GPS 지점·구간과 진행 중 기록의 복구 데이터를 기기에 저장합니다.</li>
-        <li><strong>설정:</strong> 사용자가 입력한 신장·몸무게와 테마, 화면 구성, 음성 안내 및 위치 기록 안내 확인 여부를 기기에 저장합니다. 몸무게는 칼로리 추정에 사용합니다. 입력하지 않으면 70kg을 계산 기준으로 사용하며, 신장은 칼로리 계산에 사용하지 않습니다.</li>
-        <li><strong>GPX 코스:</strong> 사용자가 고른 파일의 이름·좌표·고도 등을 기기에서 읽어 지도와 길 안내에 사용합니다. 선택한 코스는 앱 실행 중 메모리에 보관합니다.</li>
+        <li>목적: 지도에 현재 위치를 표시하고 현재 위치 주변으로 지도를 이동합니다.</li>
+        <li>항목: 위도·경도, 위치 측정 시각, 위치 정확도, 기기 위치 서비스가 제공하는 속도·고도·진행 방향 및 각 값의 정확도.</li>
+        <li>처리 방법: 위치 권한을 허용한 상태에서 지도 화면을 열면 기기 위치 서비스에서 정보를 받습니다. 이 기능만으로는 주행 기록을 저장하지 않습니다.</li>
+        <li>보유기간: 화면 표시를 위해 메모리에서 일시적으로 처리하며 별도 주행 기록으로 보관하지 않습니다. 화면을 벗어나거나 앱이 백그라운드로 전환되면 이 기능의 위치 수신을 중단합니다. 현재 위치를 지도에 표시할 때의 SDK 통신은 제5항 ①에서 안내합니다.</li>
       </ul>
-
-      <h2>2. 위치 권한과 백그라운드 기록</h2>
-      <p>현재 위치 표시, 주행 측정 및 GPX 안내에는 기기의 위치 서비스와 위치 권한이 필요합니다. 지도를 보는 동안의 위치 수신은 화면을 벗어나거나 앱이 백그라운드로 가면 중단합니다.</p>
-      <p>주행 측정 또는 GPX 안내를 처음 시작할 때 위치 기록과 화면이 꺼진 동안의 사용을 안내하고 동의를 받습니다. 동의하지 않으면 새 기록을 시작하지 않습니다. 측정 중에는 Android의 위치 포그라운드 서비스와 알림을 사용하므로 화면을 끄거나 다른 앱을 사용해도 위치 기록이 계속됩니다. 일시정지하거나 측정을 종료하면 주행 기록을 위한 위치 수신을 중단합니다. 권한을 거부하거나 기기 위치 서비스를 끄면 해당 기능을 사용할 수 없습니다.</p>
-
-      <h2>3. 외부 서비스와 데이터 이동</h2>
-      <p>앱 운영자의 서버로 주행 기록, GPX 파일, 신체 정보를 전송하지 않습니다. 광고·분석 서비스에도 이 정보를 전송하지 않습니다.</p>
-      <p>지도를 표시할 때 앱은 이용자 기기에서 OpenStreetMap Foundation의 기본 지도 타일 서버(https://tile.openstreetmap.org)로 필요한 타일을 직접 요청합니다. 요청에는 표시 영역의 타일 좌표·확대 수준과 앱 식별 문자열이 포함됩니다. 통신 과정에서 IP 주소 등 네트워크 정보도 OpenStreetMap Foundation에 전달되어 처리될 수 있습니다. 타일 좌표로 지도를 본 대략적인 지역을 알 수 있으며, 현재 위치 따라가기를 사용하면 그 주변 타일을 요청합니다. 앱 운영자는 타일 요청을 자체 서버로 중계하거나 해당 요청 정보를 수집·보관하지 않습니다. 정확한 GPS 좌표, 전체 주행 기록 및 GPX 파일은 타일 요청에 포함되지 않습니다. 요청은 OpenStreetMap Foundation의 전 세계 캐시 서버 중 하나에서 처리될 수 있습니다. 자세한 내용은 <a href="https://osmfoundation.org/wiki/Privacy_Policy" target="_blank" rel="noopener">https://osmfoundation.org/wiki/Privacy_Policy</a>를 참고해 주세요.</p>
-      <p>위치 값은 Android와 기기에 설정된 위치 서비스가 제공합니다. 음성 안내는 기기에 설치된 TTS 엔진을 사용하며 앱은 마이크로 음성을 수집하지 않습니다. Android 또는 기기 제공자의 백업·기기 이전 설정에 따라 앱 데이터가 백업·복원될 수 있습니다. 사용자가 내보낸 GPX 파일은 사용자가 선택한 저장 위치나 서비스에서 관리됩니다.</p>
-
-      <h2>4. 보관과 삭제</h2>
-      <p>완료한 주행 기록은 사용자가 삭제할 때까지 기기에 보관합니다. 앱의 주행 기록에서 삭제하면 해당 주행 요약과 GPS 지점을 함께 삭제합니다. 이동거리가 0m인 주행은 완료 기록으로 남기지 않습니다. 진행 중 기록의 복구 데이터는 주행 종료·폐기 또는 앱 데이터 초기화 때까지 보관합니다.</p>
-      <p>신체 정보와 설정은 사용자가 변경·삭제하거나 앱 데이터를 초기화할 때까지 보관합니다. GPX 코스는 앱 실행 중 메모리에 보관하며, 앱을 다시 시작하면 다시 선택해야 합니다. 받은 지도 타일은 기기에 캐시될 수 있고, 운영체제의 저장 공간 관리 또는 앱 데이터 초기화에 따라 삭제됩니다.</p>
-      <p>앱을 삭제하거나 앱 데이터를 초기화하면 기기에 저장된 앱 데이터가 제거됩니다. 시스템 백업에 남은 데이터, 앱 밖으로 내보낸 GPX 파일과 다른 앱·서비스에 사용자가 따로 저장한 파일은 각 기기·서비스의 설정에서 관리해야 합니다.</p>
-
-      <h2>5. 이용자의 선택과 문의</h2>
-      <p>기기 설정에서 위치 권한을 철회할 수 있습니다. 앱에서 주행 기록을 삭제하고 신체 정보와 음성 안내 설정을 변경할 수 있습니다. 개인정보의 열람·정정·삭제·처리 정지 또는 이 처리방침에 관한 문의는 <a href="mailto:raon@kwxl.moe">raon@kwxl.moe</a>로 보내 주세요. 문의 시 보내주신 이메일 주소와 내용은 답변을 위해 사용하고, 더 이상 필요하지 않으면 삭제합니다.</p>
-
-      <h2>6. 보호 조치와 변경</h2>
-      <p>주행 기록과 설정은 앱 전용 저장 영역에서 관리하며, 지도 타일은 HTTPS로 요청합니다. 처리 항목이나 외부 서비스가 바뀌면 이 처리방침을 갱신합니다.</p>
+      <p><strong>② 주행 측정·기록 및 GPX 안내</strong></p>
+      <ul>
+        <li>목적: 주행 거리·시간·속도·페이스·진행 방향·고도와 칼로리를 계산하고, 이동 경로를 기록하며 선택한 GPX 코스의 진행 상황과 길을 안내합니다.</li>
+        <li>항목: 위도·경도, 위치 측정 시각, 위치·속도·고도·진행 방향의 값과 정확도, 주행 식별번호, 시작·종료·최근 저장 시각, GPS 지점 순서와 구간, 지점 수, 주행 상태, 거리, 이동·경과 시간, 현재·평균·최고 속도, 페이스, 칼로리 추정치, 칼로리 계산에 사용한 몸무게, 마지막 위치 및 중단된 주행의 복구 정보.</li>
+        <li>처리 방법: 위치 기록 안내를 확인하고 위치 권한을 허용한 뒤 측정을 시작하거나 GPX 안내를 시작하면 기기에서 계산하고 앱 전용 저장 영역에 기록합니다.</li>
+        <li>보유기간: 완료된 주행은 이용자가 해당 기록을 삭제하거나 앱 데이터를 초기화할 때까지 보관합니다. 진행 중·일시정지·중단된 주행은 종료하여 완료 기록으로 전환하거나 앱 데이터를 초기화할 때까지 보관합니다. 이동거리가 0m인 주행은 종료 시 임시 기록과 GPS 지점을 삭제하고 완료 기록을 남기지 않습니다.</li>
+        <li>설정에서 몸무게를 변경하거나 지워도 과거 주행에 저장된 계산 기준 몸무게는 변경되지 않습니다. 과거 값을 지우려면 해당 주행 기록도 삭제해야 합니다.</li>
+      </ul>
+      <p><strong>③ 신체 정보와 앱 설정</strong></p>
+      <ul>
+        <li>목적: 입력한 신체 정보를 보관하고 몸무게를 칼로리 추정에 적용하며, 이용자가 선택한 화면 및 안내 설정을 유지합니다.</li>
+        <li>항목: 선택 입력한 신장·몸무게, 테마, 대시보드 표시 항목과 순서, 제목 표시줄 자동 숨김, 음성 안내 설정, 위치 기록 안내 확인 여부.</li>
+        <li>처리 방법: 이용자의 입력·선택에 따라 기기 내 앱 전용 저장 영역에 저장합니다.</li>
+        <li>보유기간: 설정을 변경·삭제하거나 앱 데이터를 초기화할 때까지 보관합니다. 신장·몸무게는 입력하지 않아도 앱을 이용할 수 있습니다. 몸무게를 입력하지 않으면 70kg을 기준으로 칼로리를 추정합니다. 신장은 칼로리 계산에 사용하지 않습니다.</li>
+      </ul>
+      <p><strong>④ GPX 코스 불러오기</strong></p>
+      <ul>
+        <li>목적: 이용자가 선택한 코스를 지도에 표시하고 거리·고도와 길을 안내합니다.</li>
+        <li>항목: 선택한 파일의 이름과 내용, 코스 이름, 경로·지점의 위도·경도·고도·시각, 경로 구간 및 코스에서 계산한 거리·고도 정보.</li>
+        <li>처리 방법: 파일 선택 화면 또는 다른 앱의 ‘연결 프로그램’에서 이용자가 지정한 파일을 읽어 기기에서 처리합니다. 원본 파일을 운영자에게 업로드하지 않습니다.</li>
+        <li>보유기간: 불러온 코스는 앱 실행 중 메모리에서 보관하며 다른 코스로 교체하거나 앱 프로세스를 종료하면 해당 메모리에서 제거됩니다. 원본 파일은 삭제하지 않습니다.</li>
+      </ul>
+      <p><strong>⑤ GPX 내보내기</strong></p>
+      <ul>
+        <li>목적: 이용자가 선택한 주행을 GPX 파일로 저장합니다.</li>
+        <li>항목: 주행 식별번호가 포함된 파일·주행 이름, 주행 시작 시각, GPS 지점의 위도·경도·고도·측정 시각 및 구간.</li>
+        <li>처리 방법: ‘GPX 내보내기’를 선택하면 파일을 생성하여 Android 파일 저장 화면에서 이용자가 지정한 저장 위치나 서비스에 기록합니다.</li>
+        <li>보유기간: 내보낸 파일은 해당 위치나 서비스에서 이용자가 삭제할 때까지 관리됩니다. 앱 내 주행 삭제나 앱 삭제로 내보낸 파일까지 삭제되지는 않습니다.</li>
+      </ul>
+      <p><strong>⑥ 앱 이용 문의 및 개인정보 관련 요청</strong></p>
+      <ul>
+        <li>목적: 이용자가 요청한 앱 이용 상담, 오류 확인, 개인정보 관련 고충 및 권리 행사 처리.</li>
+        <li>항목: 발신 이메일 주소, 발신자 표시 이름, 문의·회신 내용, 송수신 시각 및 이용자가 직접 첨부한 자료에 포함된 개인정보. 이름이나 첨부자료 제출을 필수로 요구하지 않습니다.</li>
+        <li>수집 방법: 이용자가 <a href="mailto:sansintheblock@gmail.com">sansintheblock@gmail.com</a>으로 직접 보낸 이메일을 Google의 Gmail 서비스로 수신·보관하고 회신합니다.</li>
+        <li>처리 근거: 앱 서비스 이용에 관한 문의·요청 처리를 위한 「개인정보 보호법」 제15조제1항제4호(계약 이행). 별도의 마케팅 동의를 받거나 광고에 이용하지 않습니다.</li>
+        <li>보유기간: 문의·요청 처리가 완료되어 최종 회신을 마칠 때까지 보관한 뒤 지체 없이 삭제합니다. 후속 문의가 계속되거나 해당 문의에 관한 분쟁이 진행 중이면 그 문의·분쟁 처리 완료 시까지 보관합니다. 앱의 주행 기록을 자동으로 첨부하거나 수집하지 않습니다.</li>
+      </ul>
+      <p><strong>⑦ Last.fm 사용자명 및 음악 기록(선택)</strong></p>
+      <ul>
+        <li>목적: 주행 시간에 해당하는 음악 기록을 조회·표시하고 조회 결과를 재사용합니다.</li>
+        <li>항목: 입력한 Last.fm 사용자명, 주행 식별자와 조회 시작·종료 시각, 캐시 저장 시각, 곡명·아티스트·재생 시각·앨범 이미지 주소.</li>
+        <li>처리 방법: 사용자명과 조회 결과를 기기 내 앱 전용 저장 영역에 보관합니다. 외부 조회·이미지 통신은 제5항 ⑤에서 안내합니다. 비밀번호나 Last.fm 로그인 토큰은 받지 않으며, 사용자명 입력으로 계정 소유권을 인증하지 않습니다.</li>
+        <li>보유기간: 사용자명은 변경·연결 해제 또는 앱 데이터 초기화 시까지 보관합니다. 음악 캐시는 사용자명 변경·연결 해제·해당 주행 삭제 시 삭제를 시도하며, 자동으로 10분 후 삭제되지는 않습니다. 정리되지 않은 데이터는 앱 데이터 초기화로 제거할 수 있습니다. 시스템 백업 사본은 기기 백업 설정에서 별도로 관리합니다. 삭제 방법은 제3항 ⑤에서 안내합니다.</li>
+      </ul>
+      <p>지도 SDK와 음악 조회의 외부 통신에 관한 사항은 제5항에서 안내합니다.</p>
+      <h2>2. 위치 권한과 위치 기록</h2>
+      <p>지도에서 현재 위치를 표시하려면 위치 서비스와 위치 권한이 필요합니다. 주행 측정과 GPX 안내에는 정확한 위치 권한이 필요하며, 대략적인 위치만 허용하면 측정을 시작하지 않습니다. 현재 위치 표시를 위한 위치 수신과 주행 기록을 위한 위치 수신은 구분됩니다.</p>
+      <p>측정 시작·재개 또는 GPX 안내 시작 시 최초 한 번 위치 기록 안내를 표시하고 ‘동의하고 시작’을 선택했는지를 기기에 저장합니다. 취소하면 새 측정·안내를 시작하지 않으며 기존 주행 기록과 설정은 계속 확인할 수 있습니다. 이 안내는 Android의 위치 권한 요청과 구분되는 절차로, 위치 기록 방식과 이용자의 실행 의사를 확인하기 위한 것입니다. 광고·분석 목적의 개인정보 처리에 대한 동의를 의미하지 않습니다.</p>
+      <p>앱이 화면에 표시된 상태에서 이용자가 시작한 측정은 Android의 위치 포그라운드 서비스와 주행 알림을 사용하여 이어집니다. 현재 Android 앱은 ‘항상 허용’에 해당하는 백그라운드 위치 권한(ACCESS_BACKGROUND_LOCATION)을 요청하지 않습니다. 이용자가 주행 측정을 시작한 뒤에는 화면이 꺼지거나 다른 앱으로 전환하여 Bikevia가 화면에 보이지 않는 동안에도 주행 측정을 위한 위치 수신과 기록이 계속됩니다. 측정을 일시정지하거나 종료하면 주행 기록을 위한 새로운 위치 수신을 중단합니다. GPX 길 안내만 종료해도 이미 시작한 주행 측정은 계속될 수 있으므로, 기록을 멈추려면 측정도 일시정지하거나 종료해야 합니다.</p>
+      <p>Android의 ‘설정 &gt; 앱 &gt; Bikevia &gt; 권한 &gt; 위치’에서 위치 권한을 철회할 수 있습니다. 기기 위치 서비스를 끄거나 권한을 거부하면 위치를 사용하는 기능이 제한됩니다. 설정 경로와 명칭은 기기 및 Android 버전에 따라 다를 수 있습니다.</p>
+      <h2>3. 개인정보의 파기 절차 및 방법</h2>
+      <p><strong>① 주행 기록</strong></p>
+      <p>앱의 ‘주행 기록’ 목록에서 해당 기록의 삭제 버튼을 누르고 삭제를 확인하면, 기기 내 데이터베이스에서 해당 주행 요약과 GPS 지점을 함께 삭제합니다. 진행 중인 주행은 목록에서 바로 삭제할 수 없으며 종료한 뒤 삭제할 수 있습니다. 중단된 주행은 먼저 복구한 뒤 종료·삭제하거나 앱 데이터를 초기화할 수 있습니다.</p>
+      <p><strong>② 신체 정보와 설정</strong></p>
+      <p>‘설정 &gt; 신체 정보’에서 신장·몸무게 입력란을 비우고 ‘신체 정보 저장’을 누르면 현재 프로필의 해당 값을 지울 수 있습니다. 다른 설정은 설정 화면에서 변경할 수 있습니다. 모든 앱 저장 데이터를 지우려면 Android의 앱 정보에서 저장공간의 데이터 삭제 기능을 이용하거나 앱을 삭제할 수 있습니다.</p>
+      <p><strong>③ GPX 코스 및 지도 캐시</strong></p>
+      <p>불러온 GPX 코스는 메모리에서 관리하며, 앱 프로세스가 종료되면 제거됩니다. 카카오맵 SDK는 지도 표시에 필요한 데이터를 기기에 캐시할 수 있습니다. 지도 캐시는 기기의 앱 저장공간 설정에서 캐시를 지우거나 앱 데이터를 초기화하여 정리할 수 있습니다. 기기 내 기록이나 캐시를 삭제해도 카카오 서버의 통신 기록이 함께 삭제되는 것은 아닙니다. 서버 측 처리는 제5항 ①에서 안내합니다. 현재 앱은 OSM 타일 서버에 직접 연결하지 않습니다. OSM 지도를 사용하던 이전 버전을 설치한 기기에는 지도 이미지 캐시가 남아 있을 수 있습니다. 이 경우 기기의 앱 캐시 삭제나 앱 데이터 초기화로 정리할 수 있습니다.</p>
+      <p><strong>④ 문의 이메일</strong></p>
+      <p>제1항 ⑥의 보유기간이 끝나면 운영자가 보관한 문의 메일과 첨부자료를 삭제하고, 메일함의 휴지통에 남은 사본도 삭제합니다. 이용자가 보관한 발신·수신 메일은 이용자의 메일 서비스에서 별도로 관리해야 합니다. Google의 활성·백업 시스템에 남은 사본은 Google의 삭제 절차에 따라 제거되므로 운영자가 메일함에서 삭제한 시점과 서버의 사본 제거 시점에는 차이가 있을 수 있습니다.</p>
+      <p><strong>⑤ Last.fm 사용자명 및 음악 캐시</strong></p>
+      <p>‘설정 &gt; Last.fm’에서 사용자명을 변경하거나 ‘연결 해제’를 선택할 수 있습니다. 사용자명 변경·연결 해제 시 음악 캐시 전체, 주행 삭제 시 해당 주행의 음악 캐시를 삭제하도록 요청합니다. 캐시 정리가 완료되지 않아 남은 데이터는 기기의 앱 데이터 삭제로 제거할 수 있습니다. 앱의 일반 캐시 삭제만으로 음악 데이터베이스가 모두 삭제되는 것은 아닙니다. 연결 해제나 앱 데이터 삭제는 Last.fm 계정·원본 음악 기록, 제공자의 서버 로그 또는 시스템 백업 사본을 삭제하지 않습니다.</p>
+      <p>앱의 기록 삭제는 데이터베이스의 해당 항목을 삭제하는 방식입니다. 기기 저장매체를 덮어써서 복구 가능성까지 제거하는 별도의 기능을 제공하지는 않습니다. 시스템 백업, 원본 GPX 파일, 외부로 내보낸 GPX 파일 및 다른 앱·서비스에 따로 저장한 사본은 각 기기·서비스의 설정에서 별도로 삭제해야 합니다.</p>
+      <h2>4. 개인정보의 제3자 제공 및 처리업무 위탁</h2>
+      <p>운영자는 이용자의 기기에서 처리되는 주행 기록, GPX 코스 및 신체 정보를 자체 서버로 수집하여 제3자에게 제공하거나 그 처리를 위탁하지 않습니다.</p>
+      <p>다만 앱에 포함된 카카오맵 SDK는 지도 제공을 위해 이용자의 기기에서 카카오 서비스와 직접 통신합니다. 앱이 지도 SDK에 전달하는 좌표와 네트워크 요청 정보의 처리는 제5항 ①에서 안내합니다. 운영자에게 정보가 전송되지 않는다는 사실만으로 외부 서비스로의 정보 전송이 없다는 뜻은 아닙니다.</p>
+      <p>Last.fm 음악 조회를 선택하면 이용자의 기기에서 Last.fm으로 사용자명과 주행 시간 범위를 직접 전송하며, 앨범 이미지 표시에 이미지 서버와도 통신합니다. 관련 항목과 처리 방식은 제1항 ⑦ 및 제5항 ⑤에서 안내합니다.</p>
+      <p>이용자가 GPX 파일의 저장 대상으로 외부 서비스를 직접 선택하면 해당 서비스가 파일을 처리할 수 있습니다. 문의 이메일은 Google LLC의 Gmail을 이용해 수신·보관·회신하며, 관련 처리는 제1항 ⑥ 및 제5항 ②에서 안내합니다. 기기 내 주행 기록이나 신체 정보가 Gmail로 자동 전송되지는 않습니다.</p>
+      <h2>5. 외부 서비스 이용 및 국외 처리</h2>
+      <p><strong>① 카카오맵 지도 SDK</strong></p>
+      <p>Android의 지도 화면·전체화면 지도·GPX 코스 지도는 카카오맵 SDK를 사용합니다. 지도 화면을 열거나 표시 영역을 이동·확대·축소하면 지도 표시를 위해 이용자의 기기에서 카카오 서비스로 네트워크 요청이 발생할 수 있습니다.</p>
+      <ul>
+        <li>제공자 및 목적: 주식회사 카카오. 앱 인증과 지도 데이터 제공·표시.</li>
+        <li>처리 정보: 앱 인증에 사용하는 앱 키와 Android 앱 식별·서명 정보, 지도 요청 영역·확대 수준, IP 주소 및 요청 시각 등 통신 과정의 정보가 처리될 수 있습니다. 현재 위치 주변으로 지도를 이동하면 요청 영역에서 이용자의 위치가 추정될 수 있습니다.</li>
+        <li>지도에 전달하는 정보: 앱은 현재 위치의 위도·경도와 진행 방향, GPX 경로의 좌표와 시작·종료 지점을 SDK의 지도 이동 및 마커·경로선 표시에 사용합니다. 경로선에는 이미 지나온 구간도 포함됩니다. 주행 거리·시간·속도·칼로리 계산, 기록 보관 및 GPX 경로 안내 계산은 기기에서 수행합니다. 앱에 전체 GPX 원본 파일·주행 기록 데이터베이스·신체 정보를 카카오 서버로 업로드하는 별도 기능은 없습니다. 다만 SDK에 좌표를 전달한다는 사실과 SDK의 서버 전송 범위는 구분되며, 모든 좌표가 기기 밖으로 전송되지 않는다고 보장하지 않습니다.</li>
+        <li>보유기간·처리 국가: 카카오가 처리하는 정보에는 카카오의 개인정보 처리방침이 적용됩니다. 이 앱의 SDK 요청에 적용되는 서버 로그의 구체적인 보유기간과 처리·보관 국가는 확인되지 않았습니다. 국내 서비스라는 이유만으로 국내에서만 처리한다고 단정하지 않습니다.</li>
+        <li>이용자의 선택: 위치 권한을 거부하면 앱의 현재 위치 표시가 제한됩니다. 위치 권한을 철회해도 GPX 코스나 다른 지역의 지도 표시에 필요한 통신까지 중단되지는 않습니다. 지도 이용을 중단하려면 지도 화면을 닫을 수 있으며, SDK 통신을 차단하려면 앱을 완전히 종료하거나 기기에서 지원하는 앱 네트워크 접근 제한 기능을 사용할 수 있습니다. 네트워크를 제한하면 새로운 지도 데이터를 불러올 수 없습니다. 저장된 주행 기록 조회와 GPX 파일의 기기 내 처리는 인터넷 연결 없이 이용할 수 있습니다.</li>
+        <li>서비스 안내: <a href="https://developers.kakao.com/docs/ko/kakaomap/common" target="_blank" rel="noopener">https://developers.kakao.com/docs/ko/kakaomap/common</a></li>
+        <li>카카오 개인정보 처리방침: <a href="https://www.kakao.com/policy/privacy" target="_blank" rel="noopener">https://www.kakao.com/policy/privacy</a></li>
+        <li>카카오비즈니스 개인정보 처리방침: <a href="https://business.kakao.com/policy/privacy/" target="_blank" rel="noopener">https://business.kakao.com/policy/privacy/</a></li>
+      </ul>
+      <p><strong>② Gmail 문의 메일</strong></p>
+      <ul>
+        <li>서비스 제공자: Google LLC(Gmail).</li>
+        <li>업무 및 목적: <a href="mailto:sansintheblock@gmail.com">sansintheblock@gmail.com</a>으로 보낸 문의 이메일의 수신·보관·회신.</li>
+        <li>처리 항목: 발신·수신 이메일 주소, 발신자 표시 이름, 메일 내용·첨부자료, 송수신 시각 및 메일 전송에 필요한 통신 정보.</li>
+        <li>처리 시기·방법: 이용자가 메일을 보내거나 운영자가 회신할 때 전자우편망을 통해 전송되고 Gmail 서버에 보관됩니다.</li>
+        <li>국외 처리: Gmail 이용 과정에서 문의 이메일이 국외에서 처리·보관될 수 있습니다. 이 설명은 서비스 이용 사실을 안내하는 것으로, 「개인정보 보호법」 제28조의8제1항제3호에 따른 계약 이행상 필요성 및 법정 고지 요건이 모두 충족되었다는 뜻은 아닙니다. 적용 근거와 필요한 고지 사항은 확인 중입니다.</li>
+        <li>처리 국가: Google은 미국을 포함한 여러 국가의 서버를 운영하며, 문의 이메일은 대한민국 외 국가에서도 처리·보관될 수 있습니다. 운영자는 개별 이메일이 실제로 처리·보관되는 모든 국가를 특정하거나 선택할 수 없습니다.</li>
+        <li>보유기간·삭제: 운영자는 제1항 ⑥의 문의 처리 완료 기준에 따라 메일함과 휴지통에서 메일을 삭제합니다. Google 측 서버·백업의 삭제에는 Google의 보관·삭제 정책이 적용됩니다.</li>
+        <li>이용자의 선택: 이메일을 보내지 않아도 앱을 이용할 수 있습니다. Gmail을 통한 메일 처리를 원하지 않으면 해당 주소로 문의 메일을 보내지 않을 수 있으며, 이 경우 이메일을 통한 문의 접수·답변은 이용하기 어렵습니다.</li>
+        <li>Google 개인정보 처리방침: <a href="https://policies.google.com/privacy?hl=ko" target="_blank" rel="noopener">https://policies.google.com/privacy?hl=ko</a></li>
+        <li>Google 데이터 보관·삭제 안내: <a href="https://policies.google.com/technologies/retention?hl=ko" target="_blank" rel="noopener">https://policies.google.com/technologies/retention?hl=ko</a></li>
+      </ul>
+      <p><strong>③ 기기 위치 서비스와 음성 안내</strong></p>
+      <p>위치 값은 Android 및 기기에 설정된 위치 서비스가 제공합니다. GPX 음성 안내에는 기기에 설치된 한국어 TTS 음성 중 네트워크가 필요 없다고 표시된 음성을 선택하여 안내 문장을 전달합니다. 사용할 수 있는 음성이 없으면 음성 안내를 제공하지 않습니다. 마이크를 이용하여 이용자의 음성을 수집하지 않습니다. 기기 위치 서비스와 TTS 엔진의 독립적인 데이터 처리에는 해당 제공자의 정책과 기기 설정이 적용됩니다.</p>
+      <p><strong>④ 시스템 백업·파일 저장·외부 링크</strong></p>
+      <p>현재 앱은 Android의 시스템 백업을 명시적으로 차단하지 않습니다. Android 또는 기기 제공자의 백업·기기 이전 설정에 따라 주행 기록과 설정, Last.fm 사용자명과 음악 캐시 등 앱 데이터가 백업·복원될 수 있습니다. 연결 해제나 기기 내 삭제로 시스템 백업 사본까지 함께 삭제되는 것은 아닙니다. 백업 여부와 삭제 방법은 기기의 백업 설정에서 확인할 수 있습니다. 이용자가 파일 선택·저장 화면에서 클라우드 서비스를 선택하면 그 서비스가 파일을 처리할 수 있습니다.</p>
+      <p>앱의 개인정보 처리방침 링크는 외부 브라우저에서 열립니다. 공개 페이지를 열면 해당 웹사이트의 제공·보안·전송을 담당하는 서비스에서 접속 IP 주소와 요청 시각 등의 통신 정보를 처리할 수 있습니다. 이 접속 과정에서 앱의 주행 기록과 신체 정보가 운영자 웹사이트로 자동 전송되는 것은 아닙니다. 해당 서비스의 기록 보관· 삭제는 서비스 제공자의 정책 및 기기 설정에 따릅니다.</p>
+      <p><strong>⑤ Last.fm 음악 기록 조회 (선택 기능)</strong></p>
+      <ul>
+        <li>제공자 및 목적: Last.fm Limited. 이용자가 선택한 주행 시간에 해당하는 음악 기록 조회.</li>
+        <li>이용자가 설정에서 Last.fm 사용자명을 저장한 상태로 주행 기록 상세 화면을 열면 캐시 상태에 따라 기기가 Last.fm API에 음악 기록을 요청합니다. 주행 종료 후 상세 화면이 자동으로 열리는 경우도 포함됩니다. ‘음악 새로고침’을 누르면 캐시 유효 여부와 관계없이 다시 조회합니다. 조회 시간 범위에는 주행 중 일시정지 시간도 포함됩니다.</li>
+        <li>전송 항목은 Last.fm 사용자명, 주행 시작·종료 시각을 기준으로 한 UTC 조회 범위, 앱 API 키, 메서드·페이지 번호·페이지당 건수·응답 형식 등의 요청 설정입니다. 시간 경계의 누락을 줄이기 위해 시작 1초 전부터 종료 1초 후까지 요청한 뒤 기기에서 실제 주행 구간으로 거릅니다. IP 주소·요청 시각 등 통신 정보도 처리될 수 있습니다. GPS 좌표, 신체 정보, 주행 식별자 및 전체 주행 기록은 이 조회에 전송하지 않습니다.</li>
+        <li>사용자명과 조회 결과는 제1항 ⑦의 항목에 따라 기기에 저장합니다. 10분은 캐시 재사용 기준이며 자동 삭제 기간이 아닙니다. 통신 실패 시 오래된 캐시도 표시할 수 있습니다. 비밀번호나 로그인 토큰을 받거나 음악 재생 기록을 Last.fm에 업로드하지 않습니다.</li>
+        <li>앨범 이미지를 표시할 때 API가 제공하는 HTTPS 이미지 주소의 서버에 직접 접속합니다. 캐시된 음악을 표시할 때도 이미지 통신이 발생할 수 있으며 해당 서버는 IP 주소 등 통신 정보를 처리할 수 있습니다. 곡/출처 링크를 누르면 외부 브라우저에서 Last.fm의 곡/사용자 페이지를 엽니다. 웹사이트의 통신 정보와 쿠키 등에는 해당 제공자 정책 및 브라우저 설정이 적용됩니다.</li>
+        <li>사용자명 변경·연결 해제 및 주행 삭제에 따른 캐시 정리는 제3항 ⑤에서 안내합니다. 기능을 사용하지 않거나 설정에서 연결을 해제하면 이후 음악 조회를 시작하지 않습니다. 이미 진행 중인 API·이미지 요청은 완료될 수 있습니다. API 키가 없는 빌드에서는 음악 조회를 하지 않습니다.</li>
+        <li>Last.fm 및 이미지 제공자의 처리·보관과 국외 처리에는 각 제공자 정책이 적용됩니다. 이 앱 요청의 구체적인 처리 국가·서버 로그 보유기간과 적용 법적 근거는 별도 확인이 필요하며, 사용자명 저장을 법률상 모든 동의 요건의 충족으로 단정하지 않습니다.</li>
+        <li>조회 API 안내: <a href="https://www.last.fm/api/show/user.getRecentTracks" target="_blank" rel="noopener">https://www.last.fm/api/show/user.getRecentTracks</a></li>
+        <li>Last.fm 개인정보 처리방침: <a href="https://www.last.fm/legal/privacy" target="_blank" rel="noopener">https://www.last.fm/legal/privacy</a></li>
+      </ul>
+      <h2>6. 개인정보 자동 수집 장치에 관한 사항</h2>
+      <p>운영자는 Bikevia 앱에서 맞춤형 광고나 앱 이용행태 분석을 목적으로 광고 식별자, 맞춤형 광고용 쿠키 또는 이용자 행동 분석 SDK를 설치·운영하지 않습니다. 다만 앱의 기능 수행을 위한 기기 위치 수신은 제1항·제2항에서, 카카오맵 SDK, Last.fm API·앨범 이미지 및 외부 링크의 통신 정보 처리는 제5항에서 별도로 안내합니다. 이 설명은 카카오·Last.fm 등 외부 서비스가 자체 정책에 따라 처리하는 통신 정보까지 존재하지 않는다는 뜻은 아닙니다.</p>
+      <h2>7. 개인정보의 안전성 확보조치</h2>
+      <ul>
+        <li>주행 기록·설정·음악 캐시는 일반 공유 폴더가 아닌 Android의 앱 전용 저장 영역에서 관리하여 운영체제의 앱별 접근 제한을 적용합니다.</li>
+        <li>위치 기능에는 Android의 권한 체계를 적용하고, 이용자가 지정한 파일을 시스템 파일 선택·저장 화면이나 파일 열기 요청으로 읽고 저장합니다.</li>
+        <li>주행 기록·GPX 코스·신체 정보를 운영자의 서버에 자동 업로드하지 않습니다.</li>
+        <li>이용자가 요청하지 않은 문의용 첨부파일 업로드 기능을 두지 않으며, 문의 시에도 필요한 설명만 전달하도록 안내합니다.</li>
+      </ul>
+      <h2>8. 정보주체와 법정대리인의 권리·의무 및 행사방법</h2>
+      <p>이용자는 개인정보의 열람·정정·삭제·처리정지 및 동의 철회에 관하여 다음 방법을 이용할 수 있습니다.</p>
+      <ul>
+        <li>열람·사본 저장: 앱의 ‘주행 기록’에서 주행 요약을 확인하고, 개별 기록의 ‘GPX 내보내기’로 경로를 파일로 저장할 수 있습니다. 신체 정보는 ‘설정’에서 확인할 수 있습니다.</li>
+        <li>정정: ‘설정 &gt; 신체 정보’에서 값을 바꾸고 저장할 수 있습니다. 과거 주행의 GPS 지점이나 계산 기준 몸무게를 개별 편집하는 기능은 제공하지 않습니다.</li>
+        <li>삭제: 제3항의 방법으로 주행 기록, 현재 신체 정보 또는 앱 데이터를 삭제할 수 있습니다. 외부 파일과 백업에 남은 사본은 해당 서비스에서 별도로 삭제해야 합니다.</li>
+        <li>처리정지·위치 사용 철회: 측정을 일시정지·종료하고 기기 설정에서 위치 권한을 철회할 수 있습니다. 권한 철회만으로 기존 기록이 삭제되지는 않습니다.</li>
+        <li>Last.fm 정보: 사용자명은 ‘설정 &gt; Last.fm’에서 확인·변경·연결 해제하고, 음악 결과는 주행 상세에서 확인할 수 있습니다. 연결 해제와 캐시 삭제는 제3항 ⑤에서 안내합니다. Last.fm이 보관하는 원본 정보의 삭제 등은 제공자 절차를 이용해야 합니다.</li>
+        <li>문의 정보에 대한 권리 행사: 제9항의 이메일로 열람·정정·삭제·처리정지 요청을 보낼 수 있습니다. 운영자는 요청 내용을 확인하여 관련 법령에 따른 기간 내에 처리 결과를 회신하며, 제한되는 경우 그 사유와 이의제기 방법을 안내합니다.</li>
+      </ul>
+      <p>운영자는 기기 안의 주행 기록·신체 정보에 원격으로 접근할 수 없으므로 이메일을 받아 해당 기기 데이터를 대신 열람·수정·삭제할 수는 없습니다. 이 정보에 관하여 문의하면 앱과 기기에서 직접 처리할 수 있는 방법을 안내합니다. 운영자가 보관하는 문의 이메일에 관해서는 위 요청을 직접 접수하고 처리합니다.</p>
+      <p>법정대리인 또는 위임받은 대리인을 통해 문의와 권리 행사를 할 수 있습니다. 운영자가 보관하는 문의 정보에 대한 요청은 본인 또는 정당한 대리인의 요청인지 확인하는 데 필요한 최소한의 정보를 요청할 수 있습니다. 만 14세 미만 아동의 권리 행사는 법정대리인을 통해 요청할 수 있습니다. 앱은 연령 확인이나 법정대리인 동의 정보를 별도로 수집하지 않습니다. 만 14세 미만 아동의 문의에 법정대리인 동의가 필요한 경우에는 법정대리인을 통해 문의해 주세요. 주민등록번호나 가족관계증명서 등 불필요한 신분 자료를 먼저 보내지 마세요.</p>
+      <p>다른 사람의 개인정보를 허락 없이 보내거나 권리를 침해하지 않아야 합니다. 기기나 내보낸 GPX 파일을 다른 사람에게 전달하면 위치와 주행 경로가 노출될 수 있으므로 파일의 저장·공유 범위를 직접 관리해 주세요.</p>
+      <h2>9. 개인정보 보호책임자 및 문의 창구</h2>
+      <p>개인정보 보호와 관련된 문의·고충·권리 행사 요청은 운영자가 직접 처리합니다.</p>
+      <ul>
+        <li>성명: 최라온</li>
+        <li>직위: Bikevia 운영자 / 개인정보 보호책임자</li>
+        <li>이메일: <a href="mailto:sansintheblock@gmail.com">sansintheblock@gmail.com</a></li>
+        <li>담당 업무: 개인정보 관련 문의, 열람·정정·삭제·처리정지 요청 및 고충 처리</li>
+      </ul>
+      <p>문의할 때 주행 전체 경로나 신체 정보를 반드시 첨부할 필요는 없습니다. 답변에 필요한 설명만 보내 주세요.</p>
+      <h2>10. 권익침해 구제방법</h2>
+      <p>개인정보 침해에 대한 상담·신고 또는 분쟁 조정이 필요하면 다음 기관에 문의할 수 있습니다. 운영자를 통한 처리로 해결되지 않은 경우에도 이용할 수 있습니다.</p>
+      <ul>
+        <li>개인정보 분쟁조정위원회: 1833-6972 / <a href="https://www.kopico.go.kr" target="_blank" rel="noopener">https://www.kopico.go.kr</a></li>
+        <li>개인정보침해 신고센터: 118 / <a href="https://privacy.kisa.or.kr" target="_blank" rel="noopener">https://privacy.kisa.or.kr</a></li>
+        <li>경찰청 사이버범죄 신고시스템: 182 / <a href="https://ecrm.police.go.kr" target="_blank" rel="noopener">https://ecrm.police.go.kr</a></li>
+      </ul>
+      <h2>11. 개인정보 처리방침의 시행 및 변경</h2>
+      <p>이 처리방침의 시행일은 문서 상단에 표시합니다. 앱의 기능, 처리 항목, 외부 서비스 또는 관계 법령의 변경으로 내용이 달라지는 경우 변경된 방침의 시행일과 주요 변경 사항을 앱에서 연결되는 개인정보 처리방침 페이지에 안내합니다. 변경 전 방침도 이용자가 확인할 수 있도록 공개합니다.</p>
+      <p>공개 페이지: <a href="https://ra0n.me/bike/privacy/" target="_blank" rel="noopener">https://ra0n.me/bike/privacy/</a> 확인 경로: 앱 ‘설정 &gt; 개인정보 처리방침’</p>
     </article>
 
     <!-- English -->
@@ -166,35 +297,166 @@
         <p>Contact: <a href="mailto:raon@kwxl.moe">raon@kwxl.moe</a></p>
       </div>
 
-      <h2>1. Information Processed and Purposes</h2>
-      <p>The app does not provide sign-up or login features and does not collect or store personal information such as your name, email address, or phone number.</p>
+      <h2>1. Purposes, Information Processed, and Retention</h2>
+      <p>The Operator processes only the minimum information needed for the purposes and features below. On-device information is needed for current location display, ride tracking and recording, GPX guidance, and saved preferences that you request. The basis for this processing is performance of the service contract under Article 15(1)(4) of the Korean Personal Information Protection Act. This explains on-device features; it does not establish a basis for all external SDK processing or overseas transfers. Inquiry information received by the Operator is described separately in item 6. External SDKs and services you select are covered in section 5.</p>
+      <p><strong>1) Current location display</strong></p>
       <ul>
-        <li><strong>Current location display:</strong> The app receives your device's location while you view the map to show your current position. Location received for this purpose is not saved as a ride record.</li>
-        <li><strong>Ride tracking and GPX guidance:</strong> The app receives location, reception time, accuracy, speed, altitude, and heading to calculate distance, time, and speed, record your route, and guide you along a course.</li>
-        <li><strong>Ride records:</strong> The app stores the ride ID, start and end times, ride metrics, estimated calories, GPS points and segments, and recovery data for a ride in progress on your device.</li>
-        <li><strong>Settings:</strong> The app stores the height and weight you enter, your theme and screen layout choices, voice guidance settings, and whether you have acknowledged the location recording notice on your device. Your weight is used to estimate calories. If you do not enter a weight, the calculation uses 70 kg. Height is not used to calculate calories.</li>
-        <li><strong>GPX courses:</strong> The app reads the name, coordinates, altitude, and other data from a file you select on your device to display the course on the map and provide guidance. The selected course is kept in memory while the app is running.</li>
+        <li>Purpose: Display your position and move the map to the area around it.</li>
+        <li>Information: Latitude, longitude, location measurement time, location accuracy, and speed, altitude, heading, and their accuracy when supplied by the device.</li>
+        <li>Method: When you open the map with location permission enabled, the app receives information from the device location service. This feature alone does not create a saved ride record.</li>
+        <li>Retention: Information is temporarily processed in memory for display and is not retained as a separate ride record. Location updates for this feature stop when you leave the screen or the app moves to the background. SDK communications involved in displaying your location are explained in section 5, item 1.</li>
       </ul>
-
-      <h2>2. Location Permission and Background Recording</h2>
-      <p>Displaying your current location, tracking rides, and providing GPX guidance require your device's location services and location permission. Location updates used to display your position on the map stop when you leave that screen or the app moves to the background.</p>
-      <p>When you first start ride tracking or GPX guidance, the app explains location recording, including use while the screen is off, and asks for your agreement. If you do not agree, a new recording does not start. During tracking, the app uses an Android location foreground service and notification, so location recording continues while the screen is off or you use another app. Location updates for ride recording stop when you pause or end tracking. If you deny location permission or turn off device location services, these features will not work.</p>
-
-      <h2>3. External Services and Data Transfers</h2>
-      <p>The app does not send ride records, GPX files, or body measurements to a server operated by the app developer. It does not send this information to advertising or analytics services.</p>
-      <p>To display the map, the app directly requests the necessary tiles from the OpenStreetMap Foundation's standard tile server (https://tile.openstreetmap.org) from your device. Each request includes the tile coordinates and zoom level for the visible area and an app identification string. Network information, including your IP address, may also be sent to and processed by the OpenStreetMap Foundation during the request. Tile coordinates can reveal the approximate area you are viewing. When you use the follow-current-location feature, the app requests tiles around your current location. The app operator does not route tile requests through its own server or collect or retain information from those requests. Exact GPS coordinates, complete ride records, and GPX files are not included in tile requests. A request may be handled by one of the OpenStreetMap Foundation's cache servers around the world. For details, see <a href="https://osmfoundation.org/wiki/Privacy_Policy" target="_blank" rel="noopener">https://osmfoundation.org/wiki/Privacy_Policy</a>.</p>
-      <p>Location data is provided by Android and the location services configured on your device. Voice guidance uses a text-to-speech engine installed on your device; the app does not collect audio through the microphone. App data may be backed up and restored according to Android or your device provider's backup and device transfer settings. GPX files you export are managed by the storage location or service you choose.</p>
-
-      <h2>4. Retention and Deletion</h2>
-      <p>Completed ride records remain on your device until you delete them. Deleting a ride in the app also deletes its summary and GPS points. A ride with a recorded distance of 0 m is not saved as a completed record. Recovery data for a ride in progress is retained until the ride is ended or discarded, or the app data is cleared.</p>
-      <p>Body measurements and settings are retained until you change or delete them, or clear the app data. A selected GPX course is kept in memory while the app is running; you must select it again after restarting the app. Downloaded map tiles may be cached on your device and removed by the operating system's storage management or when the app data is cleared.</p>
-      <p>Uninstalling the app or clearing its data removes app data stored on your device. Data remaining in a system backup, GPX files exported outside the app, and files you separately saved in other apps or services must be managed through the settings of the relevant device or service.</p>
-
-      <h2>5. Your Choices and Contact</h2>
-      <p>You can revoke location permission in your device settings. In the app, you can delete ride records and change your body measurements and voice guidance settings. To ask about accessing, correcting, deleting, or stopping the processing of your personal information, or about this policy, contact <a href="mailto:raon@kwxl.moe">raon@kwxl.moe</a>. The email address and message you send will be used to respond to your inquiry and deleted when no longer needed.</p>
-
-      <h2>6. Safeguards and Changes</h2>
-      <p>Ride records and settings are kept in the app's private storage area, and map tiles are requested over HTTPS. This policy will be updated if the information processed or external services change.</p>
+      <p><strong>2) Ride tracking, recording, and GPX guidance</strong></p>
+      <ul>
+        <li>Purpose: Calculate distance, time, speed, pace, heading, altitude, and calories; record your route; and provide progress and guidance along a selected course.</li>
+        <li>Information: Latitude, longitude, location measurement time, location accuracy, speed, altitude, heading and their accuracy; ride identifier; start, end, and latest save times; GPS point sequence, segments and count; tracking state; distance; moving and elapsed time; current, average and maximum speed; pace; estimated calories; weight used for the calculation; last location; and interrupted-ride recovery information.</li>
+        <li>Method: After you acknowledge the location recording notice, grant location permission, and start tracking or GPX guidance, the app calculates these values on your device and saves records in its private storage.</li>
+        <li>Retention: Completed rides remain until you delete them or clear app data. Active, paused, and interrupted rides remain until finalized as completed records or until app data is cleared. Ending a ride with a distance of 0 m deletes its draft and GPS points without creating a completed record.</li>
+        <li>Changing or clearing your profile weight does not change the weight already stored with past rides. Delete those rides to remove their historical values.</li>
+      </ul>
+      <p><strong>3) Body measurements and preferences</strong></p>
+      <ul>
+        <li>Purpose: Retain measurements you enter, use weight to estimate calories, and preserve your display and guidance preferences.</li>
+        <li>Information: Optional height and weight; theme; dashboard items and order; automatic title bar hiding; voice guidance setting; and whether the location recording notice has been acknowledged.</li>
+        <li>Method: Your entries and selections are saved in private on-device storage.</li>
+        <li>Retention: Until changed or cleared, or until app data is cleared. Measurements are optional. If no weight is entered, calorie estimates use 70 kg. Height is not used for calorie calculations.</li>
+      </ul>
+      <p><strong>4) GPX course import</strong></p>
+      <ul>
+        <li>Purpose: Display the selected course and provide distance, elevation, and route guidance.</li>
+        <li>Information: Selected file name and contents; course name; route and point latitude, longitude, elevation and time; route segments; and distance and elevation information calculated from the course.</li>
+        <li>Method: The app reads the file you select in the system file picker or open through another app and processes it locally. It does not upload the original file to the Operator.</li>
+        <li>Retention: The imported course stays in memory while the app runs. Replacing it with another course or ending the app process removes it from that memory. The original file is not deleted.</li>
+      </ul>
+      <p><strong>5) GPX export</strong></p>
+      <ul>
+        <li>Purpose: Save a ride you select as a GPX file.</li>
+        <li>Information: File and ride names containing the ride identifier; ride start time; and GPS point latitude, longitude, elevation, measurement time and segments.</li>
+        <li>Method: Selecting &quot;GPX 내보내기&quot; creates a file and writes it to the location or service you choose in the Android save dialog.</li>
+        <li>Retention: The exported file is managed at that location or service until you delete it there. Deleting a ride in the app or uninstalling the app does not delete exported files.</li>
+      </ul>
+      <p><strong>6) App inquiries and privacy requests</strong></p>
+      <ul>
+        <li>Purpose: Handle app support, reported errors, privacy complaints, and rights requests you submit.</li>
+        <li>Information: Sender email address, sender display name, inquiry and reply contents, sending and receiving times, and personal information in attachments you choose to send. Your name and attachments are not required.</li>
+        <li>Collection method: Email you send directly to <a href="mailto:sansintheblock@gmail.com">sansintheblock@gmail.com</a>, received, stored, and answered using Google&#x27;s Gmail service.</li>
+        <li>Basis: Article 15(1)(4) of the Korean Personal Information Protection Act (performance of a contract), for inquiries and requests about use of the app service. Information is not used for advertising or marketing.</li>
+        <li>Retention: Until the inquiry or request is resolved and the final reply is sent, followed by deletion without delay. If follow-up correspondence or a related dispute continues, information is kept until that matter is resolved. Ride records are not collected or attached automatically.</li>
+      </ul>
+      <p><strong>7) Last.fm username and listening history (optional)</strong></p>
+      <ul>
+        <li>Purpose: Retrieve and display listening history for a ride and reuse results.</li>
+        <li>Information: Entered username, ride identifier, query start/end times, cache save time, track names, artists, playback times, and album image URLs.</li>
+        <li>Method: The username and results are saved in app-private storage. External requests and image communications are described in section 5, item 5. The app does not receive your password or Last.fm login tokens, and entering a username does not authenticate ownership of the account.</li>
+        <li>Retention: The username remains until changed, disconnected, or app data is cleared. The app attempts to delete listening caches when you change or disconnect the username or delete the relevant ride. Caches are not automatically deleted after ten minutes. Clear app data to remove remaining local data, and manage system backup copies separately in device backup settings. Deletion methods are described in section 3, item 5.</li>
+      </ul>
+      <p>Map SDK and listening-history communications are described in section 5.</p>
+      <h2>2. Location Permission and Recording</h2>
+      <p>Showing your position requires location services and location permission. Ride tracking and GPX guidance require precise location; tracking does not start with approximate permission alone. Location updates for the map preview are separate from updates used to record a ride.</p>
+      <p>Before you first start or resume tracking or start GPX guidance, the app displays a location recording notice and saves whether you selected &quot;동의하고 시작&quot; (Agree and start). Cancelling does not start new tracking or guidance; existing records and settings remain available. This notice is separate from Android&#x27;s location permission request and confirms that you understand and choose to start location recording. It is not consent to advertising or analytics processing.</p>
+      <p>Tracking that you start while the app is visible continues using an Android location foreground service and ride notification. The current Android app does not request the &quot;Allow all the time&quot; background location permission (ACCESS_BACKGROUND_LOCATION). After you start tracking, location updates and recording continue when the screen is off or another app is in use and Bikevia is no longer visible. Pausing or ending tracking stops new location updates for ride recording. Stopping GPX guidance alone can leave ride tracking running. Pause or end tracking as well to stop recording.</p>
+      <p>You can revoke permission under Android Settings &gt; Apps &gt; Bikevia &gt; Permissions &gt; Location. Denying permission or disabling device location services limits location-dependent features. Menu names vary by device and Android version.</p>
+      <h2>3. Deletion Procedures and Methods</h2>
+      <p><strong>1) Ride records</strong></p>
+      <p>In &quot;주행 기록&quot; (Ride history), select the delete button for a ride and confirm. The app deletes its summary and GPS points together from the device database. Active rides cannot be deleted directly from the list; end the ride first. For an interrupted ride, recover it, end it and delete it, or clear app data.</p>
+      <p><strong>2) Body measurements and preferences</strong></p>
+      <p>Under &quot;설정 &gt; 신체 정보&quot; (Settings &gt; Body measurements), clear the height or weight field and select &quot;신체 정보 저장&quot; (Save body measurements) to remove the current profile value. Other preferences can be changed in Settings. Use Android&#x27;s app storage data deletion feature or uninstall the app to remove all locally saved app data.</p>
+      <p><strong>3) GPX courses and map cache</strong></p>
+      <p>Imported courses are kept in memory and removed when the app process ends. The Kakao Maps SDK may cache map data on your device. You can clear map cache through your device&#x27;s app storage settings or by clearing app data. Deleting local records or cache does not also delete communications logs on Kakao servers; see section 5, item 1. The current app does not connect directly to OSM tile servers. Devices that had an earlier version using OSM maps may retain map image caches. You can remove them by clearing the app cache or app data in device settings.</p>
+      <p><strong>4) Inquiry email</strong></p>
+      <p>When the retention period in section 1, item 6 ends, the Operator deletes retained messages and attachments, including copies in the mailbox trash. Copies in your own sent or received mailbox must be managed through your email service. Copies in Google&#x27;s active and backup systems follow Google&#x27;s deletion procedures, so their removal may occur later than deletion from the Operator&#x27;s mailbox.</p>
+      <p><strong>5) Last.fm username and listening cache</strong></p>
+      <p>Change your username or select &quot;연결 해제&quot; (Disconnect) under &quot;설정 &gt; Last.fm&quot; (Settings &gt; Last.fm). Changing or disconnecting the username requests deletion of all listening caches; deleting a ride requests deletion of its listening cache. Clear app data to remove data left when cache cleanup does not complete. Clearing only the app&#x27;s ordinary cache does not remove the entire listening database. Disconnecting or clearing app data does not delete your Last.fm account, original listening history, providers&#x27; server logs, or system backup copies.</p>
+      <p>The app deletes database entries. It does not provide a separate storage overwriting feature to eliminate forensic recovery possibilities. System backups, original GPX files, exported GPX files, and copies saved in other apps or services must be deleted separately through the relevant device or service.</p>
+      <h2>4. Third-Party Disclosure and Processing Providers</h2>
+      <p>The Operator does not collect on-device ride records, GPX courses, or body measurements on its own server to disclose them to third parties or entrust their processing to an external provider.</p>
+      <p>The included Kakao Maps SDK communicates directly with Kakao from your device. Section 5, item 1 explains coordinates passed to the SDK and network information. The fact that information is not sent to the Operator does not mean there is no transmission to an external service.</p>
+      <p>If you enable Last.fm listening history, your device sends the username and ride time range directly to Last.fm and contacts image servers to display album images. See section 1, item 7 and section 5, item 5 for the information and methods involved.</p>
+      <p>A file storage service you select for GPX export may process that file. The Operator uses Google LLC&#x27;s Gmail to receive, store, and answer inquiry emails; see section 1, item 6 and section 5, item 2. On-device rides and body measurements are not automatically sent to Gmail.</p>
+      <h2>5. External Services and Overseas Processing</h2>
+      <p><strong>1) Kakao Maps SDK</strong></p>
+      <p>Android map screens, fullscreen maps, and GPX course maps use the Kakao Maps SDK. Opening a map, moving the viewed area, or zooming may trigger network requests from your device to Kakao to display maps.</p>
+      <ul>
+        <li>Provider and purpose: Kakao Corp.; app authentication and map data delivery and display.</li>
+        <li>Information processed: The app key and Android app identification and signing information used for authentication, the requested map area and zoom level, and communications information such as IP address and request time may be processed. Requests for maps around your current location may reveal your approximate location through the requested area.</li>
+        <li>Information passed to the map: The app uses your current latitude, longitude, and bearing, GPX route coordinates including already-traveled sections, and start and finish points for the SDK&#x27;s camera, markers, and route lines. Ride distance, time, speed, and calorie calculations, record storage, and GPX guidance calculations run on your device. The app has no separate feature for uploading complete original GPX files, the ride database, or body measurements to Kakao servers. However, passing coordinates to the SDK is distinct from the SDK&#x27;s server communications; we do not guarantee that all coordinates remain on your device.</li>
+        <li>Retention and processing locations: Information processed by Kakao is subject to Kakao&#x27;s privacy policy. The specific server-log retention periods and processing and storage countries for this app&#x27;s SDK requests have not been confirmed. A Korean service does not establish processing exclusively in Korea.</li>
+        <li>Your choices: Denying location permission limits current-location display. Revoking permission does not stop communications needed to show GPX courses or maps of other areas. You can close map screens to stop using maps. To block SDK communications, fully close the app or use app network restrictions if supported by your device. Restricting network access prevents loading new map data. Viewing saved rides and on-device GPX file processing work without an internet connection.</li>
+        <li>Service information: <a href="https://developers.kakao.com/docs/ko/kakaomap/common" target="_blank" rel="noopener">https://developers.kakao.com/docs/ko/kakaomap/common</a></li>
+        <li>Kakao Privacy Policy: <a href="https://www.kakao.com/policy/privacy" target="_blank" rel="noopener">https://www.kakao.com/policy/privacy</a></li>
+        <li>Kakao Business Privacy Policy: <a href="https://business.kakao.com/policy/privacy/" target="_blank" rel="noopener">https://business.kakao.com/policy/privacy/</a></li>
+      </ul>
+      <p><strong>2) Gmail inquiry email</strong></p>
+      <ul>
+        <li>Provider: Google LLC (Gmail).</li>
+        <li>Service and purpose: Receive, store, and answer inquiries sent to <a href="mailto:sansintheblock@gmail.com">sansintheblock@gmail.com</a>.</li>
+        <li>Information: Sender and recipient email addresses, sender display name, message contents and attachments, sending/receiving times, and communications information needed for email delivery.</li>
+        <li>Timing and method: Information travels through email networks when you send a message or the Operator replies, and is stored on Gmail servers.</li>
+        <li>Overseas processing: Inquiry email may be processed or stored abroad through Gmail. This describes service use; it does not establish that contractual necessity and all disclosure requirements under Article 28-8(1)(3) of the Korean Personal Information Protection Act have been met. The applicable basis and required disclosures are still being verified.</li>
+        <li>Countries: Google operates servers in multiple countries, including the United States. Inquiry emails may be processed or stored outside South Korea. The Operator cannot identify or select every country where individual messages are processed or stored.</li>
+        <li>Retention and deletion: The Operator deletes messages from the mailbox and trash when the inquiry is resolved as described in section 1, item 6. Google&#x27;s own retention and deletion policies apply to its server and backup copies.</li>
+        <li>Choice: You can use the app without sending email. If you do not want Gmail to process your inquiry, you can choose not to email this address; support through this email channel would then be unavailable.</li>
+        <li>Google Privacy Policy: <a href="https://policies.google.com/privacy?hl=en" target="_blank" rel="noopener">https://policies.google.com/privacy?hl=en</a></li>
+        <li>Google retention information: <a href="https://policies.google.com/technologies/retention?hl=en" target="_blank" rel="noopener">https://policies.google.com/technologies/retention?hl=en</a></li>
+      </ul>
+      <p><strong>3) Device location and voice guidance</strong></p>
+      <p>Android and the location services configured on your device supply location values. For GPX voice guidance, the app selects an installed Korean TTS voice marked as not requiring a network and passes guidance sentences to it. Voice guidance is unavailable if a suitable voice cannot be used. The app does not record your voice through the microphone. Independent processing by location service providers and TTS engines is governed by their policies and your device settings.</p>
+      <p><strong>4) System backup, file services, and external links</strong></p>
+      <p>The current app does not explicitly disable Android system backup. Android or your device provider may back up or restore app data, including rides, preferences, your Last.fm username and listening cache, according to backup and device transfer settings. Disconnecting or deleting local data does not also delete system backup copies. Check your device&#x27;s backup settings for availability and deletion options. If you select a cloud provider in the file open or save dialog, that provider may process the file.</p>
+      <p>The app&#x27;s privacy policy link opens in an external browser. Services providing, securing, or delivering the website may process communications information such as your IP address and request time. Opening the page does not automatically send ride records or body measurements to the Operator&#x27;s website. Retention and deletion follow the service providers&#x27; policies and device settings.</p>
+      <p><strong>5) Last.fm listening history (optional)</strong></p>
+      <ul>
+        <li>Provider and purpose: Last.fm Limited. Retrieve listening history for the ride time range you select.</li>
+        <li>After you save your Last.fm username in Settings, opening a ride detail requests listening history directly from the API depending on cache status. This includes the detail screen opening automatically after you finish a ride. Selecting music refresh requests results again regardless of cache validity. The query time range includes periods when the ride was paused.</li>
+        <li>Requests contain your Last.fm username, a UTC query range based on ride start/end times, the app API key, and request settings such as method, page number, page size and response format. To reduce omissions at time boundaries, the request extends from one second before the start to one second after the end, and results are filtered to the actual ride interval on your device. Communications information such as your IP address and request time may also be processed. This request does not send GPS coordinates, body measurements, the ride identifier, or your complete ride record.</li>
+        <li>The username and results are saved on your device as described in section 1, item 7. Ten minutes is the cache reuse interval, not an automatic deletion period. Older cached results may be shown if a request fails. The app does not receive your password or login tokens or upload listening records to Last.fm.</li>
+        <li>Album images are requested directly from HTTPS image addresses supplied by the API. Image communications may also occur when displaying cached listening history. Those servers may process communications information such as IP addresses. Selecting a track/source link opens the Last.fm track/user page in your external browser. Website communications and cookies are governed by the provider&#x27;s policies and your browser settings.</li>
+        <li>Section 3, item 5 describes cache cleanup when you change or disconnect the username or delete a ride. Without enabling the feature, or after disconnecting in Settings, no further music queries are started. API and image requests already in progress may complete. Builds without an API key do not make music queries.</li>
+        <li>Processing, retention and overseas processing by Last.fm and image providers follow their policies. The specific processing countries, server-log retention periods and applicable legal basis for these requests need separate verification. Saving a username is not presented as satisfying all statutory consent requirements.</li>
+        <li>API information: <a href="https://www.last.fm/api/show/user.getRecentTracks" target="_blank" rel="noopener">https://www.last.fm/api/show/user.getRecentTracks</a></li>
+        <li>Last.fm Privacy Policy: <a href="https://www.last.fm/legal/privacy" target="_blank" rel="noopener">https://www.last.fm/legal/privacy</a></li>
+      </ul>
+      <h2>6. Automatic Collection Technologies</h2>
+      <p>The Operator does not use advertising identifiers, personalized advertising cookies, or behavior analytics SDKs for personalized advertising or app usage analytics in Bikevia. Location updates for app features are explained in sections 1 and 2. Kakao Maps SDK, Last.fm API, album image, and external-link communications are explained in section 5. This does not mean external services have no communications information processed under their own policies.</p>
+      <h2>7. Safeguards</h2>
+      <ul>
+        <li>Ride records, settings, and listening caches are kept in Android app-private storage rather than shared folders, using the operating system&#x27;s per-app access restrictions.</li>
+        <li>Location features use Android permissions. Files you select are read and written through system file dialogs or requests to open a file.</li>
+        <li>Ride records, GPX courses, and body measurements are not automatically uploaded to an Operator server.</li>
+        <li>There is no automatic inquiry attachment upload feature. Send only the explanation needed for support.</li>
+      </ul>
+      <h2>8. Your Rights and Representatives</h2>
+      <p>You can use the following methods to access, correct, delete, or stop processing your information and withdraw location permission:</p>
+      <ul>
+        <li>Access and copies: View summaries under &quot;주행 기록&quot; (Ride history). Use the individual ride&#x27;s &quot;GPX 내보내기&quot; button to save its route. View body measurements in Settings.</li>
+        <li>Correction: Change and save body measurements in Settings. The app does not support individually editing GPS points or calculation weights in past rides.</li>
+        <li>Deletion: Follow section 3 to delete rides, current measurements, or app data. Manage exported files and backup copies separately.</li>
+        <li>Stopping processing and location use: Pause or end tracking and revoke device location permission. Revoking permission does not delete existing records.</li>
+        <li>Last.fm information: View, change, or disconnect your username under Settings &gt; Last.fm and view listening results in ride details. See section 3, item 5 for disconnecting and cache deletion. Use the provider&#x27;s procedures for deleting original information held by Last.fm.</li>
+        <li>Inquiry information: Email the contact in section 9 to request access, correction, deletion, or suspension of processing. The Operator reviews requests and responds within applicable statutory periods, explaining any restrictions and how to object.</li>
+      </ul>
+      <p>The Operator cannot remotely access on-device rides or measurements and cannot access, change, or delete them on your behalf after receiving an email. The Operator can explain how to manage that information in the app or device. The Operator directly receives and handles requests about inquiry emails it holds.</p>
+      <p>Requests can be made through a legal guardian or authorized representative. For requests concerning inquiry information held by the Operator, only the minimum information needed to verify the requester or representative may be requested. Requests on behalf of children under 14 may be made by their legal guardians. The app does not separately collect age-verification or guardian consent information. If a child&#x27;s inquiry requires guardian consent, please contact the Operator through the legal guardian. Do not send unnecessary identity materials, such as resident registration numbers or family certificates, in advance.</p>
+      <p>Do not submit another person&#x27;s information without permission or infringe their rights. Sharing your device or an exported GPX file can disclose location and ride routes; manage where files are stored and who can access them.</p>
+      <h2>9. Privacy Contact</h2>
+      <p>The Operator personally handles privacy questions, complaints, and rights requests.</p>
+      <ul>
+        <li>Name: Choi Raon</li>
+        <li>Role: Bikevia Operator / Privacy Officer</li>
+        <li>Email: <a href="mailto:sansintheblock@gmail.com">sansintheblock@gmail.com</a></li>
+        <li>Responsibilities: Privacy inquiries, access/correction/deletion/suspension requests, and complaints.</li>
+      </ul>
+      <p>You do not need to attach your entire route or body measurements to an inquiry. Send only the information needed to explain the issue.</p>
+      <h2>10. Remedies for Privacy Infringement</h2>
+      <p>For privacy complaints, reports, or dispute resolution, including matters not resolved through the Operator, you may contact these Korean agencies:</p>
+      <ul>
+        <li>Personal Information Dispute Mediation Committee: 1833-6972 / <a href="https://www.kopico.go.kr" target="_blank" rel="noopener">https://www.kopico.go.kr</a></li>
+        <li>Personal Information Infringement Report Center: 118 / <a href="https://privacy.kisa.or.kr" target="_blank" rel="noopener">https://privacy.kisa.or.kr</a></li>
+        <li>Korean National Police Agency Electronic Cybercrime Report &amp; Management system: 182 / <a href="https://ecrm.police.go.kr" target="_blank" rel="noopener">https://ecrm.police.go.kr</a></li>
+      </ul>
+      <h2>11. Effective Date and Changes</h2>
+      <p>The effective date appears at the top of this policy. If app features, information processed, external services, or applicable law change, the policy page linked from the app will announce the updated effective date and main changes. Previous policies will also be made available.</p>
+      <p>Policy page: <a href="https://ra0n.me/bike/privacy/" target="_blank" rel="noopener">https://ra0n.me/bike/privacy/</a> App path: &quot;설정 &gt; 개인정보 처리방침&quot; (Settings &gt; Privacy Policy)</p>
     </article>
   </main>
 
