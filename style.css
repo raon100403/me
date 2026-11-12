@@ -101,22 +101,183 @@ body {
   display: block;
 }
 
-/* Keep the name and icons legible over moving water. */
-[data-scene="ocean"] h1 {
+/* Keep the name and icons legible over moving water and equalizer bars. */
+[data-scene="ocean"] h1,
+[data-equalizer] h1 {
   text-shadow: 0 0 28px var(--page-background);
 }
 
-[data-scene="ocean"] .logo {
+[data-scene="ocean"] .logo,
+[data-equalizer] .logo {
   filter: drop-shadow(0 0 10px var(--page-background));
+}
+
+/* Music: a round button that stretches sideways into a small player. */
+.music {
+  display: flex;
+  flex: none;
+  align-items: center;
+  width: 46px;
+  height: 46px;
+  overflow: hidden;
+  border: 1px solid #555;
+  border-radius: 23px;
+  background: #181818;
+  color: #e8e8e8;
+  transition: width 460ms cubic-bezier(0.22, 1, 0.36, 1), background 180ms ease,
+    border-color 180ms ease, transform 180ms ease;
+}
+
+.music:hover,
+.music:focus-within {
+  border-color: #888;
+}
+
+.music:not([data-open]):hover {
+  background: #242424;
+}
+
+.music:not([data-open]):active {
+  transform: scale(0.94);
+}
+
+.music[data-open] {
+  width: min(320px, 100vw - 40px);
+}
+
+/* Collapsed but still playing. */
+.music[data-playing]:not([data-open]) {
+  border-color: #d0d0d0;
+  color: #fff;
+}
+
+.music-toggle,
+.music-button {
+  display: grid;
+  flex: none;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.music-toggle {
+  width: 44px;
+  height: 44px;
+}
+
+.music-button {
+  width: 34px;
+  height: 34px;
+  transition: background 180ms ease;
+}
+
+.music-button[hidden] {
+  display: none;
+}
+
+.music-button:hover {
+  background: #303030;
+}
+
+.music-toggle:focus-visible,
+.music-button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -3px;
+}
+
+.music-button svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.music-button-line svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.9;
+}
+
+.music-icon-pause,
+[data-playing] .music-icon-play {
+  display: none;
+}
+
+[data-playing] .music-icon-pause {
+  display: block;
+}
+
+.music-panel {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 2px;
+  padding-right: 6px;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+[data-open] .music-panel {
+  opacity: 1;
+  transition: opacity 260ms ease 140ms;
+}
+
+.music-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0 8px 0 2px;
+  font-size: 14px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-empty] .music-title {
+  color: #8a8a8a;
+}
+
+.music-status {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: max-content;
+  max-width: min(340px, 100vw - 40px);
+  margin: 0;
+  color: var(--page-foreground);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: right;
+  text-shadow: 0 0 12px var(--page-background), 0 0 4px var(--page-background);
+  word-break: keep-all;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.music-status[data-visible] {
+  opacity: 0.85;
+  transform: none;
 }
 
 .background-picker {
   display: flex;
+  max-width: 240px;
+  overflow: hidden;
   align-items: center;
   padding: 8px 14px;
   border: 1px solid #555;
   border-radius: 24px;
   background: #181818;
+  transition: max-width 460ms cubic-bezier(0.22, 1, 0.36, 1), margin 460ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding 460ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms ease, visibility 0s;
 }
 
 .background-picker input {
@@ -254,6 +415,32 @@ h1 {
 .logo-discord {
   fill: currentColor;
   stroke: none;
+}
+
+/* On narrow screens the player takes the color slider's place while open. */
+@media (max-width: 640px) {
+  .music[data-open] {
+    width: min(320px, 100vw - 96px);
+  }
+
+  .music-open .background-picker {
+    max-width: 0;
+    margin-left: -12px;
+    padding-right: 0;
+    padding-left: 0;
+    opacity: 0;
+    visibility: hidden; /* also takes the slider out of the tab order */
+    transition-delay: 0s, 0s, 0s, 0s, 460ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .music,
+  .music-panel,
+  .music-status,
+  .background-picker {
+    transition: none;
+  }
 }
 
 @media (max-width: 480px) {

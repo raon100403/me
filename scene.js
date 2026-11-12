@@ -1,5 +1,6 @@
 // Two 3D backgrounds rendered with raw WebGL (no dependencies):
-//   "dots"  – a field of points riding a sine wave
+//   "dots"  – a field of points riding a sine wave; while music plays the same
+//             points line up into a graphic equalizer driven by music.js
 //   "ocean" – a lit Gerstner-wave sea with an interactive ripple simulation
 (() => {
   const canvas = document.querySelector('#scene');
@@ -128,6 +129,21 @@
   // ---------------------------------------------------------------- dots mode
 
   const dots = (() => {
+    // Grid on the XZ plane, stretching away from the camera.
+    const COLS = 210;
+    const ROWS = 120;
+    const HALF_WIDTH = 17;
+    const DEPTH = 19;
+
+    // Equalizer layout: every band is a bar of dot columns plus one empty
+    // column. The nearest rows stand up as the bars, the rest mirror them below.
+    const BAND_COLS = 7;
+    const BANDS = COLS / BAND_COLS;
+    const BAR_ROWS = 80;
+    const MIRROR_ROWS = ROWS - BAR_ROWS;
+    const WALL_DISTANCE = 10;
+    const MORPH_SECONDS = 1.6;
+
     const VERT = `
       attribute vec2 aGrid;
       uniform float uTime;
@@ -138,6 +154,10 @@
       uniform vec2 uYaw;
       uniform vec2 uPitch;
       uniform vec3 uPointer; // xz on the plane + strength
+      uniform float uMorph;  // 0 = wave field, 1 = equalizer
+      uniform vec4 uWall;    // column pitch, row pitch, base height, distance (view space)
+      uniform vec2 uTilt;
+      uniform vec2 uBand[${BANDS}]; // level and peak marker per band, 0..1
       varying float vAlpha;
 
       void main() {
@@ -159,17 +179,52 @@
         p = vec3(p.x, uPitch.x * p.y - uPitch.y * p.z, uPitch.y * p.y + uPitch.x * p.z);
 
         float w = -p.z;
-        gl_Position = vec4(p.x * uFocal / uAspect, p.y * uFocal, 0.0, w);
-
         float crest = h * 0.5 + 0.5;
         float size = (0.016 + 0.014 * crest + 0.012 * bump) * uFocal / max(w, 0.001) * uHeight * 0.5;
-        float maxSize = uHeight * 0.008;
-        gl_PointSize = clamp(size, 1.0, maxSize);
-
         float fog = smoothstep(19.0, 4.0, w) * smoothstep(0.6, 2.6, w);
         float side = smoothstep(17.0, 9.0, abs(x));
+        float alpha = fog * side * (0.22 + 0.58 * crest + 0.45 * bump);
+
+        if (uMorph > 0.0) {
+          float col = floor((x + ${HALF_WIDTH}.0) * ${(COLS - 1) / (2 * HALF_WIDTH)} + 0.5);
+          float row = floor(-z * ${(ROWS - 1) / DEPTH} + 0.5);
+          float band = min(floor(col / ${BAND_COLS}.0), ${BANDS - 1}.0);
+          float bar = step(col - band * ${BAND_COLS}.0, ${BAND_COLS - 1.5}); // 0 in the gap column
+          vec2 level = uBand[int(band)];
+
+          // Rows past the bar height are its reflection, counted from the base down.
+          float mirror = step(${BAR_ROWS}.0, row);
+          float k = row - ${BAR_ROWS}.0 * mirror;
+          float lit = clamp(level.x * ${BAR_ROWS}.0 - k, 0.0, 1.0);
+          float cap = step(abs(k - floor(level.y * ${BAR_ROWS}.0)), 0.5) * step(0.03, level.y);
+          float glow = max(lit, cap);
+
+          vec3 e = vec3(
+            (col - ${(COLS - 1) / 2}) * uWall.x,
+            uWall.z + (k + 0.5) * uWall.y * (1.0 - 2.0 * mirror),
+            -uWall.w);
+          e.z += e.x * uTilt.x + (e.y - uWall.z) * uTilt.y;
+
+          float eSize = uWall.x * mix(0.3, 0.66, glow) * uFocal / -e.z * uHeight * 0.5;
+          float eAlpha = bar * max(mix(0.08, 0.5 + 0.5 * k / ${BAR_ROWS}.0, lit), cap);
+          eAlpha *= mix(1.0, 0.32 * pow(1.0 - k / ${MIRROR_ROWS}.0, 1.5), mirror);
+
+          // The field folds up from the front edge, each dot slightly out of step.
+          float seed = fract(sin(dot(aGrid, vec2(12.9898, 78.233))) * 43758.5453);
+          float m = clamp(uMorph * 1.7 - 0.4 * row / ${ROWS - 1}.0 - 0.3 * seed, 0.0, 1.0);
+          m = m * m * (3.0 - 2.0 * m);
+          p = mix(p, e, m);
+          p.xy += sin(m * 3.14159) * vec2(seed - 0.5, fract(seed * 7.13) - 0.2) * 0.3;
+          w = -p.z;
+          size = mix(size, eSize, m);
+          alpha = mix(alpha, eAlpha, m);
+        }
+
+        gl_Position = vec4(p.x * uFocal / uAspect, p.y * uFocal, 0.0, w);
+        float maxSize = uHeight * 0.008;
+        gl_PointSize = clamp(size, 1.0, maxSize);
         float thin = clamp(size, 0.35, 1.0); // sub-pixel dots fade instead of shimmering
-        vAlpha = fog * side * thin * (0.22 + 0.58 * crest + 0.45 * bump);
+        vAlpha = alpha * thin;
       }
     `;
     const FRAG = `
@@ -186,13 +241,9 @@
 
     const { program, uniforms: u } = createProgram(VERT, FRAG, 'aGrid', [
       'uTime', 'uAspect', 'uFocal', 'uHeight', 'uCam', 'uYaw', 'uPitch', 'uPointer', 'uColor',
+      'uMorph', 'uWall', 'uTilt', 'uBand',
     ]);
 
-    // Grid on the XZ plane, stretching away from the camera.
-    const COLS = 210;
-    const ROWS = 120;
-    const HALF_WIDTH = 17;
-    const DEPTH = 19;
     const grid = new Float32Array(COLS * ROWS * 2);
     for (let r = 0, i = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
@@ -205,9 +256,28 @@
     gl.bufferData(gl.ARRAY_BUFFER, grid, gl.STATIC_DRAW);
 
     const swell = { x: 0, z: -8 };
+    const bandData = new Float32Array(BANDS * 2);
+    let morph = 0;
 
-    function draw(time, dt, still) {
+    // `spectrum` is music.js's live analysis while music is playing, else null.
+    function draw(time, dt, still, spectrum) {
       const camera = makeCamera(1.9, 0.16, 0.5, still, false);
+
+      morph = Math.min(1, Math.max(0, morph + (spectrum ? dt : -dt) / MORPH_SECONDS));
+      const source = spectrum || window.musicSpectrum;
+      if (morph > 0 && source) {
+        source.update(dt); // keeps running while the bars fold away so they sink first
+        const count = Math.min(BANDS, source.levels.length);
+        for (let band = 0; band < count; band++) {
+          bandData[band * 2] = source.levels[band];
+          bandData[band * 2 + 1] = source.peaks[band];
+        }
+      }
+      // The bars span most of the viewport's width; on tall screens the rows are
+      // stretched so the bars keep a readable height.
+      const halfHeight = WALL_DISTANCE / FOCAL;
+      const colPitch = (2 * halfHeight * view.aspect * 0.88) / (COLS - 1);
+      const rowPitch = (halfHeight * Math.min(1.2, Math.max(0.68, colPitch * BAR_ROWS / halfHeight))) / BAR_ROWS;
       let hit = 0;
       if (camera.hit) {
         swell.x = camera.hit.x;
@@ -232,6 +302,10 @@
       gl.uniform2f(u.uPitch, camera.cp, camera.sp);
       gl.uniform3f(u.uPointer, swell.x, swell.z, still ? 0 : pointer.strength * hit);
       gl.uniform3f(u.uColor, foreground[0], foreground[1], foreground[2]);
+      gl.uniform1f(u.uMorph, still ? 0 : morph);
+      gl.uniform4f(u.uWall, colPitch, rowPitch, -halfHeight * 0.5, WALL_DISTANCE);
+      gl.uniform2f(u.uTilt, pointer.x * 0.06, pointer.y * 0.05);
+      gl.uniform2fv(u.uBand, bandData);
 
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
@@ -659,6 +733,8 @@
   let ocean = null;
   let oceanFailed = false;
   let mode = 'dots';
+  let wasPlaying = false;
+  let equalizerShown = false;
 
   function setMode(next, remember) {
     if (next === 'ocean' && !ocean && !oceanFailed) {
@@ -707,7 +783,20 @@
       background[i] += (targetBackground[i] - background[i]) * ease(8);
     }
 
-    (mode === 'ocean' ? ocean : dots).draw(time, dt, still);
+    // music.js publishes the spectrum of the music that is playing. The dots
+    // become its equalizer, so starting music brings the dot field forward.
+    const spectrum = window.musicSpectrum;
+    const playing = Boolean(spectrum && spectrum.active) && !still;
+    if (playing && !wasPlaying && mode !== 'dots') setMode('dots', false);
+    wasPlaying = playing;
+    const equalizer = playing && mode === 'dots';
+    if (equalizer !== equalizerShown) {
+      equalizerShown = equalizer;
+      root.toggleAttribute('data-equalizer', equalizer);
+    }
+
+    if (mode === 'ocean') ocean.draw(time, dt, still);
+    else dots.draw(time, dt, still, playing ? spectrum : null);
 
     // Subtle 3D tilt of the name and links toward the cursor.
     if (profile) {

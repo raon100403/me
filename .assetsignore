@@ -1,0 +1,13 @@
+# Publish only the site's public files. Add new assets here when needed.
+**
+!/index.html
+!/style.css
+!/background.js
+!/music.js
+!/music/
+!/music/*
+!/scene.js
+!/bike/
+!/bike/index.html
+!/bike/privacy/
+!/bike/privacy/index.html
