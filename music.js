@@ -261,11 +261,26 @@
     if (wanted) play();
   }
 
+  // Pickers often report no MIME type (FLAC and Opus on iOS and Android in
+  // particular), so the extension decides when the type is missing.
+  const AUDIO_EXTENSIONS = /\.(mp3|m4a|m4b|aac|flac|wav|wave|ogg|oga|opus|weba|webm|mp4|aiff?|caf)$/i;
+  function isAudioFile(file) {
+    if (file.type.startsWith('audio/')) return true;
+    if (file.type && !file.type.startsWith('video/') && !file.type.startsWith('application/octet-stream')) return false;
+    return AUDIO_EXTENSIONS.test(file.name);
+  }
+
   function addFiles(files) {
     const first = playlist.length;
+    let skipped = 0;
     for (const file of files) {
+      if (!isAudioFile(file)) {
+        skipped++;
+        continue;
+      }
       playlist.push({ title: titleFromName(file.name), url: URL.createObjectURL(file) });
     }
+    if (skipped) say(skipped === files.length ? '음원 파일이 아니에요.' : '음원이 아닌 파일은 건너뛰었어요.', 5000);
     if (playlist.length === first) return;
     select(first);
     play();
