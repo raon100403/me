@@ -157,6 +157,7 @@
       uniform float uMorph;  // 0 = wave field, 1 = equalizer
       uniform vec4 uWall;    // column pitch, row pitch, base height, distance (view space)
       uniform vec2 uTilt;
+      uniform vec4 uLayout;  // columns per bar, gap columns, spectrum bands per bar, dot scale
       uniform vec2 uBand[${BANDS}]; // level and peak marker per band, 0..1
       varying float vAlpha;
 
@@ -188,9 +189,9 @@
         if (uMorph > 0.0) {
           float col = floor((x + ${HALF_WIDTH}.0) * ${(COLS - 1) / (2 * HALF_WIDTH)} + 0.5);
           float row = floor(-z * ${(ROWS - 1) / DEPTH} + 0.5);
-          float band = min(floor(col / ${BAND_COLS}.0), ${BANDS - 1}.0);
-          float bar = step(col - band * ${BAND_COLS}.0, ${BAND_COLS - 1.5}); // 0 in the gap column
-          vec2 level = uBand[int(band)];
+          float band = min(floor(col / uLayout.x), ${BANDS - 1}.0);
+          float bar = step(col - band * uLayout.x, uLayout.x - uLayout.y - 0.5); // 0 in the gap columns
+          vec2 level = uBand[int(band * uLayout.z)];
 
           // Rows past the bar height are its reflection, counted from the base down.
           float mirror = step(${BAR_ROWS}.0, row);
@@ -205,8 +206,10 @@
             -uWall.w);
           e.z += e.x * uTilt.x + (e.y - uWall.z) * uTilt.y;
 
-          float eSize = uWall.x * mix(0.3, 0.66, glow) * uFocal / -e.z * uHeight * 0.5;
-          float eAlpha = bar * max(mix(0.08, 0.5 + 0.5 * k / ${BAR_ROWS}.0, lit), cap);
+          float eSize = uWall.x * uLayout.w * mix(0.3, 0.66, glow) * uFocal / -e.z * uHeight * 0.5;
+          // Unlit dots only linger just above the bar, so the wall itself stays invisible.
+          float unlit = 0.1 * exp(-max(0.0, k - level.x * ${BAR_ROWS}.0) / 4.0);
+          float eAlpha = bar * max(mix(unlit, 0.5 + 0.5 * k / ${BAR_ROWS}.0, lit), cap);
           eAlpha *= mix(1.0, 0.32 * pow(1.0 - k / ${MIRROR_ROWS}.0, 1.5), mirror);
 
           // The field folds up from the front edge, each dot slightly out of step.
@@ -241,7 +244,7 @@
 
     const { program, uniforms: u } = createProgram(VERT, FRAG, 'aGrid', [
       'uTime', 'uAspect', 'uFocal', 'uHeight', 'uCam', 'uYaw', 'uPitch', 'uPointer', 'uColor',
-      'uMorph', 'uWall', 'uTilt', 'uBand',
+      'uMorph', 'uWall', 'uTilt', 'uLayout', 'uBand',
     ]);
 
     const grid = new Float32Array(COLS * ROWS * 2);
@@ -265,19 +268,30 @@
 
       morph = Math.min(1, Math.max(0, morph + (spectrum ? dt : -dt) / MORPH_SECONDS));
       const source = spectrum || window.musicSpectrum;
+      // Portrait screens get half as many, twice as wide bars: each shows the
+      // louder of two neighbouring spectrum bands.
+      const portrait = view.aspect < 0.9;
+      const perBar = portrait ? 2 : 1;
+      const barCols = BAND_COLS * perBar;
       if (morph > 0 && source) {
         source.update(dt); // keeps running while the bars fold away so they sink first
         const count = Math.min(BANDS, source.levels.length);
-        for (let band = 0; band < count; band++) {
-          bandData[band * 2] = source.levels[band];
-          bandData[band * 2 + 1] = source.peaks[band];
+        for (let band = 0; band < count; band += perBar) {
+          let level = 0, peak = 0;
+          for (let i = band; i < Math.min(count, band + perBar); i++) {
+            level = Math.max(level, source.levels[i]);
+            peak = Math.max(peak, source.peaks[i]);
+          }
+          bandData[band * 2] = level;
+          bandData[band * 2 + 1] = peak;
         }
       }
       // The bars span most of the viewport's width; on tall screens the rows are
-      // stretched so the bars keep a readable height.
+      // stretched so the bars fill a good part of the height instead.
       const halfHeight = WALL_DISTANCE / FOCAL;
       const colPitch = (2 * halfHeight * view.aspect * 0.88) / (COLS - 1);
-      const rowPitch = (halfHeight * Math.min(1.2, Math.max(0.68, colPitch * BAR_ROWS / halfHeight))) / BAR_ROWS;
+      const minHeight = portrait ? 1.15 : 0.68;
+      const rowPitch = (halfHeight * Math.min(1.3, Math.max(minHeight, colPitch * BAR_ROWS / halfHeight))) / BAR_ROWS;
       let hit = 0;
       if (camera.hit) {
         swell.x = camera.hit.x;
@@ -303,8 +317,9 @@
       gl.uniform3f(u.uPointer, swell.x, swell.z, still ? 0 : pointer.strength * hit);
       gl.uniform3f(u.uColor, foreground[0], foreground[1], foreground[2]);
       gl.uniform1f(u.uMorph, still ? 0 : morph);
-      gl.uniform4f(u.uWall, colPitch, rowPitch, -halfHeight * 0.5, WALL_DISTANCE);
+      gl.uniform4f(u.uWall, colPitch, rowPitch, portrait ? -halfHeight * 0.6 : -halfHeight * 0.5, WALL_DISTANCE);
       gl.uniform2f(u.uTilt, pointer.x * 0.06, pointer.y * 0.05);
+      gl.uniform4f(u.uLayout, barCols, portrait ? 2 : 1, perBar, portrait ? 1.5 : 1);
       gl.uniform2fv(u.uBand, bandData);
 
       gl.clearColor(0, 0, 0, 0);
