@@ -210,7 +210,9 @@
           // Unlit dots only linger just above the bar, so the wall itself stays invisible.
           float unlit = 0.1 * exp(-max(0.0, k - level.x * ${BAR_ROWS}.0) / 4.0);
           float eAlpha = bar * max(mix(unlit, 0.5 + 0.5 * k / ${BAR_ROWS}.0, lit), cap);
-          eAlpha *= mix(1.0, 0.32 * pow(1.0 - k / ${MIRROR_ROWS}.0, 1.5), mirror);
+          // The base must stay >= 0: a negative one makes pow() NaN, which Apple GPUs
+          // carry through to the alpha and draw as a solid dot.
+          eAlpha *= mix(1.0, 0.32 * pow(max(0.0, 1.0 - k / ${MIRROR_ROWS}.0), 1.5), mirror);
 
           // The field folds up from the front edge, each dot slightly out of step.
           float seed = fract(sin(dot(aGrid, vec2(12.9898, 78.233))) * 43758.5453);
@@ -227,7 +229,7 @@
         float maxSize = uHeight * 0.008;
         gl_PointSize = clamp(size, 1.0, maxSize);
         float thin = clamp(size, 0.35, 1.0); // sub-pixel dots fade instead of shimmering
-        vAlpha = alpha * thin;
+        vAlpha = clamp(alpha * thin, 0.0, 1.0);
       }
     `;
     const FRAG = `
@@ -237,7 +239,7 @@
 
       void main() {
         float d = length(gl_PointCoord - 0.5);
-        float a = smoothstep(0.5, 0.32, d) * min(vAlpha, 1.0);
+        float a = smoothstep(0.5, 0.32, d) * clamp(vAlpha, 0.0, 1.0);
         gl_FragColor = vec4(uColor * a, a);
       }
     `;
