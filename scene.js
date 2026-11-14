@@ -9,7 +9,7 @@
   const gl = canvas.getContext('webgl', {
     alpha: true,
     antialias: false,
-    depth: false,
+    depth: true, // the balls and ducks sit in front of / behind the background
     stencil: false,
     premultipliedAlpha: true,
     powerPreference: 'high-performance',
@@ -86,7 +86,6 @@
   const pointer = {
     x: 0, y: 0, tx: 0, ty: 0,
     active: false, strength: 0,
-    splash: false,
   };
   function onPointerMove(event) {
     pointer.tx = (event.clientX / window.innerWidth) * 2 - 1;
@@ -101,13 +100,14 @@
 
   // Builds the camera for a frame and casts a pointer ray onto the y = 0 plane.
   // `raw` aims the ray at the live cursor position instead of the eased one.
-  function makeCamera(height, basePitch, swayX, still, raw) {
+  function makeCamera(height, z, basePitch, swayX, still, raw) {
     const sway = still ? 0 : 1;
     const yaw = pointer.x * 0.07 * sway;
     const pitch = basePitch + pointer.y * 0.03 * sway;
     const camera = {
       x: pointer.x * swayX * sway,
       y: height,
+      z,
       cy: Math.cos(yaw), sy: Math.sin(yaw),
       cp: Math.cos(pitch), sp: Math.sin(pitch),
       hit: null,
@@ -121,14 +121,20 @@
     const rz = -camera.sy * vx + camera.cy * rz1;
     if (ry < -0.02) {
       const t = height / -ry;
-      camera.hit = { x: camera.x + rx * t, z: rz * t };
+      camera.hit = { x: camera.x + rx * t, z: z + rz * t };
     }
     return camera;
   }
 
+  // Clip-space depth used by every program: z = w - 1, i.e. 1 / w depth.
+  const CLIP_Z = 'w - 1.0';
+  const toys = window.toys || null;
+  const toyContext = { gl, createProgram, FOCAL, view, foreground, background };
+
   // ---------------------------------------------------------------- dots mode
 
   const dots = (() => {
+    const SHADOWS = toys ? 16 : 1;
     // Grid on the XZ plane, stretching away from the camera.
     const COLS = 210;
     const ROWS = 120;
@@ -159,6 +165,8 @@
       uniform vec2 uTilt;
       uniform vec4 uLayout;  // columns per bar, gap columns, spectrum bands per bar, dot scale
       uniform vec2 uBand[${BANDS}]; // level and peak marker per band, 0..1
+      uniform vec4 uShadow[${SHADOWS}]; // ball centre and radius
+      uniform int uShadowCount;
       varying float vAlpha;
 
       void main() {
@@ -185,6 +193,16 @@
         float fog = smoothstep(19.0, 4.0, w) * smoothstep(0.6, 2.6, w);
         float side = smoothstep(17.0, 9.0, abs(x));
         float alpha = fog * side * (0.22 + 0.58 * crest + 0.45 * bump);
+
+        // Contact shadows under the balls, fading as they rise off the surface.
+        float dotY = h * 0.32 + ripple * 0.3;
+        for (int i = 0; i < ${SHADOWS}; i++) {
+          if (i >= uShadowCount) break;
+          vec4 b = uShadow[i];
+          float dd = distance(vec2(x, z), b.xz);
+          float lift = 1.0 - smoothstep(0.0, 1.8, b.y - b.w - dotY);
+          alpha *= 1.0 - 0.85 * lift * exp(-dd * dd / (b.w * b.w * 1.7));
+        }
 
         if (uMorph > 0.0) {
           float col = floor((x + ${HALF_WIDTH}.0) * ${(COLS - 1) / (2 * HALF_WIDTH)} + 0.5);
@@ -225,7 +243,7 @@
           alpha = mix(alpha, eAlpha, m);
         }
 
-        gl_Position = vec4(p.x * uFocal / uAspect, p.y * uFocal, 0.0, w);
+        gl_Position = vec4(p.x * uFocal / uAspect, p.y * uFocal, ${CLIP_Z}, w);
         float maxSize = uHeight * 0.008;
         gl_PointSize = clamp(size, 1.0, maxSize);
         float thin = clamp(size, 0.35, 1.0); // sub-pixel dots fade instead of shimmering
@@ -246,7 +264,7 @@
 
     const { program, uniforms: u } = createProgram(VERT, FRAG, 'aGrid', [
       'uTime', 'uAspect', 'uFocal', 'uHeight', 'uCam', 'uYaw', 'uPitch', 'uPointer', 'uColor',
-      'uMorph', 'uWall', 'uTilt', 'uLayout', 'uBand',
+      'uMorph', 'uWall', 'uTilt', 'uLayout', 'uBand', 'uShadow', 'uShadowCount',
     ]);
 
     const grid = new Float32Array(COLS * ROWS * 2);
@@ -260,13 +278,38 @@
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, grid, gl.STATIC_DRAW);
 
-    const swell = { x: 0, z: -8 };
+    const swell = { x: 0, z: -8, strength: 0 };
     const bandData = new Float32Array(BANDS * 2);
     let morph = 0;
 
+    // The surface the shader draws, evaluated on the CPU for the balls.
+    function heightAt(x, z, t) {
+      const wave =
+        Math.sin(x * 0.55 + t * 0.5) * Math.cos(z * 0.45 + t * 0.35) +
+        0.5 * Math.sin((x + z) * 1.1 - t * 0.8) +
+        0.14 * Math.sin(z * 1.6 + x * 0.4 + t * 1.1);
+      const d = Math.hypot(x - swell.x, z - swell.z);
+      const bump = Math.exp(-d * d * 0.5) * swell.strength;
+      const ripple = bump * (0.8 + 0.2 * Math.sin(d * 2.2 - t * 3));
+      return (wave / 1.64) * 0.32 + ripple * 0.3;
+    }
+    function surfaceAt(x, z, t, out) {
+      const e = 0.05;
+      const y = heightAt(x, z, t);
+      const sx = (heightAt(x + e, z, t) - heightAt(x - e, z, t)) / (2 * e);
+      const sz = (heightAt(x, z + e, t) - heightAt(x, z - e, t)) / (2 * e);
+      const l = Math.hypot(sx, 1, sz);
+      out.y = y;
+      out.nx = -sx / l; out.ny = 1 / l; out.nz = -sz / l;
+      out.vy = (heightAt(x, z, t + 0.01) - y) / 0.01;
+    }
+    const balls = toys ? toys.createBalls({ surface: surfaceAt, ...toyContext }) : null;
+    const noShadows = { data: new Float32Array(4), count: 0 };
+
     // `spectrum` is music.js's live analysis while music is playing, else null.
     function draw(time, dt, still, spectrum) {
-      const camera = makeCamera(1.9, 0.16, 0.5, still, false);
+      const camera = makeCamera(1.9, 0.5, 0.16, 0.5, still, false);
+      const sceneTime = still ? 4.0 : time;
 
       morph = Math.min(1, Math.max(0, morph + (spectrum ? dt : -dt) / MORPH_SECONDS));
       const source = spectrum || window.musicSpectrum;
@@ -297,39 +340,58 @@
       let hit = 0;
       if (camera.hit) {
         swell.x = camera.hit.x;
-        swell.z = camera.hit.z + 0.5; // the camera sits at z = 0.5
+        swell.z = camera.hit.z;
         // Fade the swell out toward the horizon, where the ray grazes the plane.
         hit = Math.min(1, Math.max(0, (14 + swell.z) / 6));
       }
+      swell.strength = still ? 0 : pointer.strength * hit;
+
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      // Balls live on the wave field; while it stands up as the equalizer they wait.
+      const ballsShown = balls && morph === 0;
+      if (ballsShown) {
+        if (!still) balls.step(dt, sceneTime);
+        balls.draw(camera);
+      }
+      const shadows = ballsShown ? balls.shadows() : noShadows;
 
       gl.useProgram(program);
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      gl.enable(gl.DEPTH_TEST);
+      gl.depthFunc(gl.LESS);
+      gl.depthMask(false);
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
       gl.enableVertexAttribArray(0);
       gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
-      gl.uniform1f(u.uTime, still ? 4.0 : time);
+      gl.uniform1f(u.uTime, sceneTime);
       gl.uniform1f(u.uAspect, view.aspect);
       gl.uniform1f(u.uFocal, FOCAL);
       gl.uniform1f(u.uHeight, view.height);
-      gl.uniform3f(u.uCam, camera.x, camera.y, 0.5);
+      gl.uniform3f(u.uCam, camera.x, camera.y, camera.z);
       gl.uniform2f(u.uYaw, camera.cy, camera.sy);
       gl.uniform2f(u.uPitch, camera.cp, camera.sp);
-      gl.uniform3f(u.uPointer, swell.x, swell.z, still ? 0 : pointer.strength * hit);
+      gl.uniform3f(u.uPointer, swell.x, swell.z, swell.strength);
+      gl.uniform4fv(u.uShadow, shadows.data);
+      gl.uniform1i(u.uShadowCount, shadows.count);
       gl.uniform3f(u.uColor, foreground[0], foreground[1], foreground[2]);
       gl.uniform1f(u.uMorph, still ? 0 : morph);
       gl.uniform4f(u.uWall, colPitch, rowPitch, portrait ? -halfHeight * 0.6 : -halfHeight * 0.5, WALL_DISTANCE);
       gl.uniform2f(u.uTilt, pointer.x * 0.06, pointer.y * 0.05);
       gl.uniform4f(u.uLayout, barCols, portrait ? 2 : 1, perBar, portrait ? 1.5 : 1);
       gl.uniform2fv(u.uBand, bandData);
-
-      gl.clearColor(0, 0, 0, 0);
-      gl.clear(gl.COLOR_BUFFER_BIT);
       gl.drawArrays(gl.POINTS, 0, COLS * ROWS);
+      gl.depthMask(true);
     }
 
-    return { draw };
+    function drop(x, z) {
+      if (balls && morph === 0) balls.spawn(x, z);
+    }
+
+    return { draw, drop };
   })();
 
   // ---------------------------------------------------------------- ocean mode
@@ -430,7 +492,8 @@
         vec3 q = p - uCam;
         q = vec3(uYaw.x * q.x - uYaw.y * q.z, q.y, uYaw.y * q.x + uYaw.x * q.z);
         q = vec3(q.x, uPitch.x * q.y - uPitch.y * q.z, uPitch.y * q.y + uPitch.x * q.z);
-        gl_Position = vec4(q.x * uFocal / uAspect, q.y * uFocal, 0.0, -q.z);
+        float w = -q.z;
+        gl_Position = vec4(q.x * uFocal / uAspect, q.y * uFocal, ${CLIP_Z}, w);
       }
     `;
 
@@ -624,12 +687,11 @@
       energy = 600;
     }
 
-    function touch(hit, splash) {
+    function touch(hit) {
       if (!hit) {
         lastTouch = null;
         return;
       }
-      if (splash) press(hit.x, hit.z, 0.38, 2.8);
       if (lastTouch) {
         const dx = hit.x - lastTouch.x;
         const dz = hit.z - lastTouch.z;
@@ -679,11 +741,55 @@
 
     const linear = [0, 0, 0];
 
+    // The water surface for the ducks: the Gerstner waves the mesh shows, the
+    // orbital motion and Stokes drift of the water, plus the ripple field.
+    const RIPPLE_HEIGHT = 0.7;
+    function waterAt(x, z, t, out) {
+      // Undo the horizontal Gerstner displacement to find the wave origin point.
+      let ox = x, oz = z;
+      for (let pass = 0; pass < 2; pass++) {
+        let dx = 0, dz = 0;
+        for (let i = 0; i < GERSTNER; i++) {
+          const wx = waveData[i * 4], wz = waveData[i * 4 + 1], k = waveData[i * 4 + 2];
+          const theta = k * (wx * ox + wz * oz) - Math.sqrt(9.8 * k) * t;
+          const disp = (STEEPNESS / k) * Math.cos(theta);
+          dx += wx * disp; dz += wz * disp;
+        }
+        ox = x - dx; oz = z - dz;
+      }
+      let y = 0, vx = 0, vy = 0, vz = 0;
+      for (let i = 0; i < GERSTNER; i++) {
+        const wx = waveData[i * 4], wz = waveData[i * 4 + 1], k = waveData[i * 4 + 2], a = waveData[i * 4 + 3];
+        const omega = Math.sqrt(9.8 * k);
+        const theta = k * (wx * ox + wz * oz) - omega * t;
+        const sin = Math.sin(theta), cos = Math.cos(theta);
+        y += a * sin;
+        const orbital = (STEEPNESS / k) * omega * sin + a * a * omega * k; // + Stokes drift
+        vx += wx * orbital; vz += wz * orbital;
+        vy -= a * omega * cos;
+      }
+      // Ripples from the simulation, bilinearly sampled.
+      const ci = (x - ORIGIN_X) / CELL - 0.5, cj = (z - ORIGIN_Z) / CELL - 0.5;
+      if (ci >= 0 && cj >= 0 && ci < N - 1 && cj < N - 1) {
+        const i0 = Math.floor(ci), j0 = Math.floor(cj), fi = ci - i0, fj = cj - j0;
+        const at = (field, i, j) => field[j * N + i];
+        const lerp2 = field =>
+          (at(field, i0, j0) * (1 - fi) + at(field, i0 + 1, j0) * fi) * (1 - fj) +
+          (at(field, i0, j0 + 1) * (1 - fi) + at(field, i0 + 1, j0 + 1) * fi) * fj;
+        y += lerp2(heightField) * RIPPLE_HEIGHT;
+        vy += lerp2(velocity) * RIPPLE_HEIGHT / STEP;
+      }
+      out.y = y; out.vx = vx; out.vy = vy; out.vz = vz;
+    }
+    const ducks = toys ? toys.createDucks({ water: waterAt, splash: press, ...toyContext }) : null;
+
     function draw(time, dt, still) {
-      const camera = makeCamera(2.4, 0.1, 0.6, still, true);
+      const camera = makeCamera(2.4, 0, 0.1, 0.6, still, true);
+      const sceneTime = still ? 4.0 : time;
 
       if (!still) {
-        touch(pointer.active ? camera.hit : null, pointer.splash);
+        touch(pointer.active ? camera.hit : null);
+        if (ducks) ducks.step(dt, sceneTime);
         if (energy > 0) {
           accumulator = Math.min(accumulator + dt, STEP * 3);
           while (accumulator >= STEP) {
@@ -694,7 +800,6 @@
           uploadRipples();
         }
       }
-      pointer.splash = false;
 
       for (let i = 0; i < 3; i++) linear[i] = Math.pow(background[i], 2.2);
       // The light sits upper-left at the same spot on screen for any aspect ratio.
@@ -702,6 +807,9 @@
       const sl = Math.hypot(sx, sy, sz);
 
       gl.disable(gl.BLEND);
+      gl.disable(gl.DEPTH_TEST);
+      gl.depthMask(false);
+      gl.clear(gl.DEPTH_BUFFER_BIT);
       gl.enableVertexAttribArray(0);
 
       gl.useProgram(skyProgram.program);
@@ -716,16 +824,20 @@
       gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
 
+      // The water writes depth so the ducks' submerged parts are hidden by it.
+      gl.enable(gl.DEPTH_TEST);
+      gl.depthFunc(gl.LESS);
+      gl.depthMask(true);
       gl.useProgram(water.program);
       u = water.uniforms;
       gl.uniform3f(u.uBg, linear[0], linear[1], linear[2]);
       gl.uniform3f(u.uSun, sx / sl, sy / sl, sz / sl);
-      gl.uniform1f(u.uTime, still ? 4.0 : time);
+      gl.uniform1f(u.uTime, sceneTime);
       gl.uniform1f(u.uAspect, view.aspect);
       gl.uniform1f(u.uFocal, FOCAL);
       gl.uniform1f(u.uSpread, (view.aspect / FOCAL) * 1.2 + 0.1);
       gl.uniform2f(u.uRes, view.width, view.height);
-      gl.uniform3f(u.uCam, camera.x, camera.y, 0);
+      gl.uniform3f(u.uCam, camera.x, camera.y, camera.z);
       gl.uniform2f(u.uYaw, camera.cy, camera.sy);
       gl.uniform2f(u.uPitch, camera.cp, camera.sp);
       gl.uniform4fv(u.uWave, waveData);
@@ -738,9 +850,23 @@
       gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
       gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+
+      if (ducks) ducks.draw(camera, [sx / sl, sy / sl, sz / sl], linear);
     }
 
-    return { draw };
+    function drop(x, z) {
+      if (!ducks) return;
+      // Far clicks graze the horizon; keep the ducks within sight.
+      const dist = Math.hypot(x, z);
+      const limit = 32;
+      if (dist > limit) {
+        x *= limit / dist;
+        z *= limit / dist;
+      }
+      ducks.spawn(x, z);
+    }
+
+    return { draw, drop };
   }
 
   // ---------------------------------------------------------------- mode switching
@@ -841,10 +967,17 @@
     if (reducedMotion.matches) start();
   });
   window.addEventListener('pointermove', onPointerMove, { passive: true });
+  // A click on the background drops a ball onto the dots or a duck into the sea.
   window.addEventListener('pointerdown', event => {
     onPointerMove(event);
+    if (event.button !== 0 || reducedMotion.matches) return;
     const target = event.target;
-    if (!(target instanceof Element && target.closest('.controls'))) pointer.splash = true;
+    if (target instanceof Element && target.closest('a, button, input, label, .controls')) return;
+    const scene = mode === 'ocean' ? ocean : dots;
+    const camera = mode === 'ocean'
+      ? makeCamera(2.4, 0, 0.1, 0.6, false, true)
+      : makeCamera(1.9, 0.5, 0.16, 0.5, false, true);
+    if (camera.hit) scene.drop(camera.hit.x, camera.hit.z);
   }, { passive: true });
   window.addEventListener('pointerup', event => {
     if (event.pointerType !== 'mouse') onPointerGone();
