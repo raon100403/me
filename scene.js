@@ -166,6 +166,7 @@
       uniform vec4 uLayout;  // columns per bar, gap columns, spectrum bands per bar, dot scale
       uniform vec2 uBand[${BANDS}]; // level and peak marker per band, 0..1
       uniform vec4 uShadow[${SHADOWS}]; // ball centre and radius
+      uniform vec2 uDent[${SHADOWS}];   // depth and width of the dent under each ball
       uniform int uShadowCount;
       varying float vAlpha;
 
@@ -183,7 +184,20 @@
         float bump = exp(-d * d * 0.5) * uPointer.z;
         float ripple = bump * (0.8 + 0.2 * sin(d * 2.2 - uTime * 3.0));
 
-        vec3 p = vec3(x, h * 0.32 + ripple * 0.3, z) - uCam;
+        // The field is a soft sheet: balls press dents into it and shade it.
+        float dotY = h * 0.32 + ripple * 0.3;
+        float shade = 1.0;
+        for (int i = 0; i < ${SHADOWS}; i++) {
+          if (i >= uShadowCount) break;
+          vec4 b = uShadow[i];
+          vec2 dn = uDent[i];
+          float dd = distance(vec2(x, z), b.xz);
+          dotY -= dn.x * exp(-dd * dd / (2.0 * dn.y * dn.y));
+          float lift = 1.0 - smoothstep(0.0, 1.8, b.y - b.w - dotY);
+          shade *= 1.0 - 0.85 * lift * exp(-dd * dd / (b.w * b.w * 1.7));
+        }
+
+        vec3 p = vec3(x, dotY, z) - uCam;
         p = vec3(uYaw.x * p.x - uYaw.y * p.z, p.y, uYaw.y * p.x + uYaw.x * p.z);
         p = vec3(p.x, uPitch.x * p.y - uPitch.y * p.z, uPitch.y * p.y + uPitch.x * p.z);
 
@@ -192,17 +206,7 @@
         float size = (0.016 + 0.014 * crest + 0.012 * bump) * uFocal / max(w, 0.001) * uHeight * 0.5;
         float fog = smoothstep(19.0, 4.0, w) * smoothstep(0.6, 2.6, w);
         float side = smoothstep(17.0, 9.0, abs(x));
-        float alpha = fog * side * (0.22 + 0.58 * crest + 0.45 * bump);
-
-        // Contact shadows under the balls, fading as they rise off the surface.
-        float dotY = h * 0.32 + ripple * 0.3;
-        for (int i = 0; i < ${SHADOWS}; i++) {
-          if (i >= uShadowCount) break;
-          vec4 b = uShadow[i];
-          float dd = distance(vec2(x, z), b.xz);
-          float lift = 1.0 - smoothstep(0.0, 1.8, b.y - b.w - dotY);
-          alpha *= 1.0 - 0.85 * lift * exp(-dd * dd / (b.w * b.w * 1.7));
-        }
+        float alpha = fog * side * (0.22 + 0.58 * crest + 0.45 * bump) * shade;
 
         if (uMorph > 0.0) {
           float col = floor((x + ${HALF_WIDTH}.0) * ${(COLS - 1) / (2 * HALF_WIDTH)} + 0.5);
@@ -264,7 +268,7 @@
 
     const { program, uniforms: u } = createProgram(VERT, FRAG, 'aGrid', [
       'uTime', 'uAspect', 'uFocal', 'uHeight', 'uCam', 'uYaw', 'uPitch', 'uPointer', 'uColor',
-      'uMorph', 'uWall', 'uTilt', 'uLayout', 'uBand', 'uShadow', 'uShadowCount',
+      'uMorph', 'uWall', 'uTilt', 'uLayout', 'uBand', 'uShadow', 'uDent', 'uShadowCount',
     ]);
 
     const grid = new Float32Array(COLS * ROWS * 2);
@@ -304,7 +308,7 @@
       out.vy = (heightAt(x, z, t + 0.01) - y) / 0.01;
     }
     const balls = toys ? toys.createBalls({ surface: surfaceAt, ...toyContext }) : null;
-    const noShadows = { data: new Float32Array(4), count: 0 };
+    const noShadows = { data: new Float32Array(4), dent: new Float32Array(2), count: 0 };
 
     // `spectrum` is music.js's live analysis while music is playing, else null.
     function draw(time, dt, still, spectrum) {
@@ -376,6 +380,7 @@
       gl.uniform2f(u.uPitch, camera.cp, camera.sp);
       gl.uniform3f(u.uPointer, swell.x, swell.z, swell.strength);
       gl.uniform4fv(u.uShadow, shadows.data);
+      gl.uniform2fv(u.uDent, shadows.dent);
       gl.uniform1i(u.uShadowCount, shadows.count);
       gl.uniform3f(u.uColor, foreground[0], foreground[1], foreground[2]);
       gl.uniform1f(u.uMorph, still ? 0 : morph);

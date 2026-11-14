@@ -122,11 +122,22 @@
   const BALL = {
     RADIUS: 0.22,
     MAX: 16,
-    RESTITUTION: 0.52,
+    // The dot field is a soft, springy sheet: contact is a spring-damper, so
+    // the ball sinks in on landing and the sheet throws it back up.
+    STIFFNESS: 300,      // N/m per unit mass: a resting ball sags ~3 cm into the sheet
+    STIFFENING: 8,       // the sheet firms up as it stretches, so hard landings stop within a radius
+    DAMPING: 0.25,       // damping ratio of that spring; sets the effective bounciness (~0.45)
+    DENT_SHOW: 1.6,      // the sheet between the dots gives a little more than the ball sinks
     FRICTION: 0.3,       // friction coefficient against the surface
     ROLLING: 2.5,        // rolling resistance, 1/s (the field is bumpy; balls should linger)
-    BOUNCE_MIN: 0.5,     // slower impacts settle instead of bouncing
     SHRINK: 0.35,        // seconds a retiring ball takes to vanish
+    DENT_SIGMA: 1.7,     // width of the dent, in radii
+    DENT_RATE: 22,       // how fast the sheet follows the ball (rad/s)
+    DENT_DAMPING: 0.3,   // < 1: the sheet overshoots and wobbles back after a bounce
+    // Invisible walls that keep the balls on screen (world units; camera at z = 0.5).
+    NEAR_Z: -2.6,
+    FAR_Z: -14,
+    WALL_BOUNCE: 0.45,
   };
 
   // `surface(x, z, t, out)` fills out.y, out.nx/ny/nz (unit normal) and out.vy
@@ -134,14 +145,44 @@
   function createBalls({ surface, gl, createProgram, FOCAL, view, foreground, background }) {
     const balls = [];
     const sample = { y: 0, nx: 0, ny: 1, nz: 0, vy: 0 };
+    const R = BALL.RADIUS;
+
+    // Half-width of the visible field at depth z, less a margin.
+    function halfWidth(z) {
+      return Math.max(0.5, ((0.5 - z) * view.aspect / FOCAL) * 0.9 - R);
+    }
+    function clampInside(x, z) {
+      z = Math.min(BALL.NEAR_Z, Math.max(BALL.FAR_Z, z));
+      const hw = halfWidth(z);
+      return [Math.min(hw, Math.max(-hw, x)), z];
+    }
+
+    // Dent the balls press into the sheet, and its slope, at (x, z).
+    function dentAt(x, z, exclude, out) {
+      let y = 0, sx = 0, sz = 0;
+      for (const b of balls) {
+        if (b === exclude || b.dent <= 0.0005) continue;
+        const sigma = R * BALL.DENT_SIGMA;
+        const dx = x - b.p[0], dz = z - b.p[2];
+        const g = b.dent * BALL.DENT_SHOW * Math.exp(-(dx * dx + dz * dz) / (2 * sigma * sigma));
+        y -= g;
+        sx += g * dx / (sigma * sigma);
+        sz += g * dz / (sigma * sigma);
+      }
+      out.y = y; out.sx = sx; out.sz = sz;
+    }
+    const dent = { y: 0, sx: 0, sz: 0 };
 
     function spawn(x, z) {
+      [x, z] = clampInside(x, z);
       balls.push({
         p: [x, 3.2 + rand(0, 0.4), z],
         v: [rand(-0.3, 0.3), 0, rand(-0.3, 0.3)],
         scale: 1,
         retiring: false,
-        resting: 0,
+        pen: 0,       // how far the ball presses into the sheet
+        dent: 0,      // how far the sheet has followed (lags and overshoots)
+        dentV: 0,
       });
       let live = balls.filter(b => !b.retiring).length;
       for (let i = 0; i < balls.length && live > BALL.MAX; i++) {
@@ -153,7 +194,8 @@
     }
 
     function substep(h, t) {
-      const R = BALL.RADIUS;
+      const omega = Math.sqrt(BALL.STIFFNESS);
+      const damping = 2 * BALL.DAMPING * omega;
       for (const b of balls) {
         if (b.retiring) {
           b.scale -= h / BALL.SHRINK;
@@ -162,49 +204,59 @@
         b.v[1] -= G * h;
         b.p[0] += b.v[0] * h; b.p[1] += b.v[1] * h; b.p[2] += b.v[2] * h;
 
+        // The sheet under the ball: base wave plus the other balls' dents.
         surface(b.p[0], b.p[2], t, sample);
-        const { nx, ny, nz } = sample;
-        // Signed distance from the centre to the tangent plane under it.
-        const dist = (b.p[1] - sample.y) * ny;
-        if (dist < R) {
-          const pen = R - dist;
-          b.p[0] += nx * pen; b.p[1] += ny * pen; b.p[2] += nz * pen;
-          // Velocity relative to the moving surface.
+        dentAt(b.p[0], b.p[2], b, dent);
+        const sx = -sample.nx / sample.ny + dent.sx;
+        const sz = -sample.nz / sample.ny + dent.sz;
+        const nl = Math.hypot(sx, 1, sz);
+        const nx = -sx / nl, ny = 1 / nl, nz = -sz / nl;
+        const dist = (b.p[1] - sample.y - dent.y) * ny;
+        const pen = R - dist;
+        b.pen = Math.max(0, pen);
+        if (pen > 0) {
           const rvx = b.v[0], rvy = b.v[1] - sample.vy, rvz = b.v[2];
           const vn = rvx * nx + rvy * ny + rvz * nz;
-          if (vn < 0) {
-            const bounce = vn < -BALL.BOUNCE_MIN;
-            const j = bounce ? -(1 + BALL.RESTITUTION) * vn : -vn;
-            b.v[0] += nx * j; b.v[1] += ny * j; b.v[2] += nz * j;
-            if (bounce) {
-              // Friction on impact spins the ball up: a sliding sphere keeps
-              // 5/7 of its tangential speed once it rolls.
-              const tx = rvx - nx * vn, ty = rvy - ny * vn, tz = rvz - nz * vn;
-              const tl = Math.hypot(tx, ty, tz);
-              if (tl > 1e-5) {
-                const f = Math.min(BALL.FRICTION * j, tl * 2 / 7);
-                b.v[0] -= (tx / tl) * f; b.v[1] -= (ty / tl) * f; b.v[2] -= (tz / tl) * f;
-              }
-            }
+          // Spring-damper contact; the sheet can push but never pull.
+          const stretch = 1 + BALL.STIFFENING * (pen / R) * (pen / R);
+          const force = Math.max(0, BALL.STIFFNESS * pen * stretch - damping * vn * Math.sqrt(stretch));
+          b.v[0] += nx * force * h; b.v[1] += ny * force * h; b.v[2] += nz * force * h;
+          // A ball should not punch through on a very hard landing.
+          if (pen > R * 1.3) {
+            const push = pen - R * 1.3;
+            b.p[0] += nx * push; b.p[1] += ny * push; b.p[2] += nz * push;
           }
-          // Rolling, not sliding, down the slope: a solid sphere accelerates at
-          // 5/7 of the tangential gravity, so take the other 2/7 back out.
+          // Friction spins the ball up: sliding becomes rolling. A solid sphere
+          // rolls at 5/7 of the tangential acceleration, so take 2/7 back out.
           const an = -G * ny;
           const atx = -nx * an, aty = -G - ny * an, atz = -nz * an;
           b.v[0] -= atx * h * 2 / 7; b.v[1] -= aty * h * 2 / 7; b.v[2] -= atz * h * 2 / 7;
-          const k = Math.max(0, 1 - BALL.ROLLING * h);
+          const tx = rvx - nx * vn, ty = rvy - ny * vn, tz = rvz - nz * vn;
+          const tl = Math.hypot(tx, ty, tz);
+          if (tl > 1e-5) {
+            const f = Math.min(BALL.FRICTION * force * h, tl * 2 / 7);
+            b.v[0] -= (tx / tl) * f; b.v[1] -= (ty / tl) * f; b.v[2] -= (tz / tl) * f;
+          }
+          const k = Math.max(0, 1 - BALL.ROLLING * h * Math.min(1, pen / (R * 0.05)));
           b.v[0] *= k; b.v[2] *= k;
-          b.resting = 1;
-        } else {
-          b.resting = Math.max(0, b.resting - h * 4);
         }
+
+        // The sheet follows the ball with a little lag and springs back after it.
+        const dw = BALL.DENT_RATE;
+        b.dentV += (dw * dw * (b.pen - b.dent) - 2 * BALL.DENT_DAMPING * dw * b.dentV) * h;
+        b.dent += b.dentV * h;
+
+        // Invisible walls keep the balls in view.
+        const hw = halfWidth(b.p[2]);
+        if (b.p[0] > hw) { b.p[0] = hw; b.v[0] = -Math.abs(b.v[0]) * BALL.WALL_BOUNCE; }
+        if (b.p[0] < -hw) { b.p[0] = -hw; b.v[0] = Math.abs(b.v[0]) * BALL.WALL_BOUNCE; }
+        if (b.p[2] > BALL.NEAR_Z) { b.p[2] = BALL.NEAR_Z; b.v[2] = -Math.abs(b.v[2]) * BALL.WALL_BOUNCE; }
+        if (b.p[2] < BALL.FAR_Z) { b.p[2] = BALL.FAR_Z; b.v[2] = Math.abs(b.v[2]) * BALL.WALL_BOUNCE; }
       }
       collideSpheres(balls.filter(b => !b.retiring), R, 0.7);
 
       for (let i = balls.length - 1; i >= 0; i--) {
-        const b = balls[i];
-        const gone = b.scale <= 0 || b.p[1] < -4 || Math.abs(b.p[0]) > 18 || b.p[2] < -19.5 || b.p[2] > 1.2;
-        if (gone) balls.splice(i, 1);
+        if (balls[i].scale <= 0 || balls[i].p[1] < -4) balls.splice(i, 1);
       }
     }
     const step = makeStepper(substep);
@@ -308,8 +360,10 @@
       }
     }
 
-    // Positions and radii for the contact shadows the dot shader draws.
+    // Positions and radii for the contact shadows the dot shader draws, and
+    // the dent (depth, width) each ball presses into the sheet.
     const shadowData = new Float32Array(BALL.MAX * 4);
+    const dentData = new Float32Array(BALL.MAX * 2);
     function shadows() {
       let n = 0;
       for (const b of balls) {
@@ -317,10 +371,12 @@
         shadowData[n * 4] = b.p[0];
         shadowData[n * 4 + 1] = b.p[1];
         shadowData[n * 4 + 2] = b.p[2];
-        shadowData[n * 4 + 3] = BALL.RADIUS * Math.max(0, b.scale);
+        shadowData[n * 4 + 3] = R * Math.max(0, b.scale);
+        dentData[n * 2] = b.dent * BALL.DENT_SHOW * Math.max(0, b.scale);
+        dentData[n * 2 + 1] = R * BALL.DENT_SIGMA;
         n++;
       }
-      return { data: shadowData, count: n };
+      return { data: shadowData, dent: dentData, count: n };
     }
 
     return { spawn, step, draw, shadows, bodies: balls, MAX: BALL.MAX };
