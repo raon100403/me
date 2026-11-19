@@ -458,3 +458,22 @@ h1 {
     height: auto;
   }
 }
+
+@media (pointer: coarse), (max-width: 640px) {
+  html,
+  body {
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: pinch-zoom;
+  }
+
+  .profile {
+    position: fixed;
+    inset: 0 0 auto;
+    min-height: 0;
+    height: 100vh;
+    /* Keep the center steady as the mobile browser toolbar changes size. */
+    height: 100svh;
+    padding-block: 0;
+  }
+}

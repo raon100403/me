@@ -85,11 +85,12 @@
   // Pointer: target values are set by events, current values ease toward them.
   const pointer = {
     x: 0, y: 0, tx: 0, ty: 0,
-    active: false, strength: 0,
+    active: false, strength: 0, type: '',
   };
   function onPointerMove(event) {
     pointer.tx = (event.clientX / window.innerWidth) * 2 - 1;
     pointer.ty = 1 - (event.clientY / window.innerHeight) * 2;
+    pointer.type = event.pointerType;
     pointer.active = true;
   }
   function onPointerGone() {
@@ -948,7 +949,7 @@
 
     // Subtle 3D tilt of the name and links toward the cursor.
     if (profile) {
-      if (!still && finePointer.matches) {
+      if (!still && finePointer.matches && pointer.type !== 'touch') {
         profile.style.transform =
           `perspective(900px) rotateX(${(pointer.y * 5).toFixed(3)}deg) rotateY(${(pointer.x * 7).toFixed(3)}deg)`;
       } else if (profile.style.transform) {
